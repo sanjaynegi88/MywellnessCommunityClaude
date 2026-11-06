@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MWC 360 Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: operations console — fixed module rail on the left, working surface on the right; rail becomes a top select on phones. */
+:root{
+  --bg:#F3F6F3; --panel:#FFFFFF; --ink:#14201A; --muted:#5A6A62; --line:#D9E2DC; --soft:#E5EFE9;
+  --accent:#1E6B52; --accent-ink:#FFFFFF; --rail:#13241D; --rail-ink:#CFE0D7; --rail-dim:#7E978B;
+  --good:#2E7D32; --warn:#9A5B00; --bad:#B3261E; --info:#2B5C8A; --pet:#7A4E9C;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1512; --panel:#151E1A; --ink:#E2ECE6; --muted:#93A59C; --line:#26332D; --soft:#1B2A23;
+  --accent:#5DC49D; --accent-ink:#08130E; --rail:#0A100D; --rail-ink:#CFE0D7; --rail-dim:#6F877B;
+  --good:#7BC77F; --warn:#E3A84C; --bad:#F07C73; --info:#82B3E3; --pet:#C29BE6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1512; --panel:#151E1A; --ink:#E2ECE6; --muted:#93A59C; --line:#26332D; --soft:#1B2A23;
+  --accent:#5DC49D; --accent-ink:#08130E; --rail:#0A100D; --rail-ink:#CFE0D7; --rail-dim:#6F877B;
+  --good:#7BC77F; --warn:#E3A84C; --bad:#F07C73; --info:#82B3E3; --pet:#C29BE6; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+a{color:var(--accent)}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
+.rail{background:var(--rail);color:var(--rail-ink);padding-block:18px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:14px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:-.01em;padding:0 8px 2px}
+.brand small{display:block;font-family:var(--f-mono);font-weight:400;font-size:11px;color:var(--rail-dim);letter-spacing:.04em}
+.navgrp{margin-top:16px}
+.navgrp h6{margin:0 0 4px;padding:0 8px;font:500 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--rail-dim)}
+.nav{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;color:var(--rail-ink);font:inherit;padding:6px 8px;border-radius:6px;cursor:pointer}
+.nav:hover{background:rgba(255,255,255,.06)}
+.nav.on{background:var(--accent);color:var(--accent-ink)}
+.nav .n{font-family:var(--f-mono);font-size:11px;opacity:.6;width:18px}
+.nav .c{margin-left:auto;font-family:var(--f-mono);font-size:11px;opacity:.75}
+.mnav{display:none}
+main{min-width:0;padding-block:22px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.head h1{font-family:var(--f-display);font-weight:700;font-size:28px;line-height:1.1;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.head p{margin:4px 0 0;color:var(--muted);max-width:68ch}
+.eyebrow{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.card h3{margin:0 0 10px;font-family:var(--f-display);font-weight:500;font-size:16px}
+.card h3 small{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:12.5px;margin-left:6px}
+.stat .v{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.stat .l{color:var(--muted);font-size:12.5px;margin-top:6px}
+.btn{font:500 13px var(--f-body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:7px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.s{padding:4px 9px;font-size:12px}
+.btn.ai::before{content:"✦ ";color:inherit}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,.nav:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--soft)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;font-family:var(--f-mono);text-align:right}
+td .t{font-weight:500}
+td .sub{color:var(--muted);font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:5px;font:500 11.5px var(--f-body);padding:2px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.pill.good{color:var(--good)} .pill.warn{color:var(--warn)} .pill.bad{color:var(--bad)} .pill.info{color:var(--info)} .pill.mute{color:var(--muted)} .pill.acc{color:var(--accent)} .pill.pet{color:var(--pet)}
+.pill.ex{color:var(--muted);border-style:dashed}
+.tag{display:inline-block;font:12px var(--f-mono);background:var(--soft);padding:1px 6px;border-radius:4px;margin:0 4px 4px 0}
+.muted{color:var(--muted)}
+.note{border-left:3px solid var(--warn);background:var(--soft);padding:10px 12px;border-radius:0 8px 8px 0;font-size:13px}
+.note.ok{border-left-color:var(--accent)}
+.note.bad{border-left-color:var(--bad)}
+.empty{text-align:center;padding:28px 16px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;background:var(--panel)}
+.empty b{display:block;color:var(--ink);font-family:var(--f-display);font-weight:500;font-size:16px;margin-bottom:4px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 9px;width:100%;min-width:0}
+textarea{min-height:90px;resize:vertical}
+.tools input,.tools select{width:auto}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+label.ck{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+label.ck input{width:auto;margin-top:3px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.form .wide{grid-column:1/-1}
+.modal{position:fixed;inset:0;background:rgba(5,12,9,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(24px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px));overflow-y:auto;z-index:50}
+.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;width:min(760px,100%);display:flex;flex-direction:column;gap:14px}
+.modal h2{margin:0;font-family:var(--f-display);font-weight:700;font-size:20px}
+.aiout{white-space:pre-wrap;font-size:13.5px;background:var(--soft);border-radius:8px;padding:12px;max-height:460px;overflow:auto}
+.loop{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.loop .st{display:flex;flex-direction:column;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 9px;min-width:0;cursor:pointer}
+.loop .st b{font-weight:500;font-size:12.5px}
+.loop .st span{font:11px var(--f-mono);color:var(--muted)}
+.loop .ar{color:var(--muted);font-size:12px}
+.loop .st.back{border-style:dashed;border-color:var(--accent)}
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--soft)}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.hbar{display:grid;grid-template-columns:minmax(90px,180px) minmax(0,1fr) 54px;gap:8px;align-items:center;font-size:12.5px;margin-bottom:6px}
+.hbar .tr{background:var(--soft);height:10px;border-radius:5px;overflow:hidden}
+.hbar .tr i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.hbar .n{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.hbar .k{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat{display:flex;flex-direction:column;height:520px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.chat .top{padding:10px 14px;background:var(--accent);color:var(--accent-ink);font-weight:500;display:flex;justify-content:space-between;gap:8px}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:85%;padding:8px 11px;border-radius:12px;white-space:pre-wrap;font-size:13.5px}
+.msg.u{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:3px}
+.msg.a{align-self:flex-start;background:var(--soft);border-bottom-left-radius:3px}
+.chat form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+pre.code{background:var(--rail);color:#D6E6DD;font:12px/1.55 var(--f-mono);padding:12px;border-radius:8px;overflow-x:auto;margin:0;white-space:pre}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px;z-index:60}
+.status{font:11.5px var(--f-mono);color:var(--muted)}
+.flow{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:11.5px}
+.flow span{padding:2px 7px;border-radius:4px;background:var(--soft);color:var(--muted)}
+.flow span.on{background:var(--accent);color:var(--accent-ink)}
+details summary{cursor:pointer;color:var(--accent);font-size:13px}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{display:none}
+  .mnav{display:flex;gap:8px;align-items:center;background:var(--rail);color:var(--rail-ink);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--rail)}
+  .mnav .brand{font-size:16px;padding:0;white-space:nowrap}
+  .mnav select{background:var(--rail);color:var(--rail-ink);border-color:var(--rail-dim)}
+  .head h1{font-size:23px}
+  .hbar{grid-template-columns:minmax(70px,110px) minmax(0,1fr) 44px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+body{margin:0}[hidden]{display:none!important}
+</style>
+</head><body>
+
+<div class="mnav"><div class="brand">MWC 360</div><select id="mnavSel" aria-label="Module"></select></div>
+<div class="app">
+  <aside class="rail" id="rail"></aside>
+  <main><div class="wrap" id="view"></div></main>
+</div>
+<div id="modalRoot"></div>
+
+<script>
+/* ============================================================
+   MWC 360 — unified AI business, marketing & customer intelligence console
+   Data: artifact `db` capability (shared, persistent). AI: `sample` capability.
+   ============================================================ */
+const MODULES = [
+  {g:"Operate", id:"dashboard", n:"00", label:"Command Center"},
+  {g:"Operate", id:"automation", n:"⟳", label:"Automation & Tasks", c:"tasks"},
+  {g:"Intelligence", id:"research", n:"01", label:"Market Research", c:"research"},
+  {g:"Intelligence", id:"ads", n:"02", label:"Ad Intelligence", c:"ads"},
+  {g:"Intelligence", id:"competitors", n:"03", label:"Competitor Sites", c:"competitors"},
+  {g:"Intelligence", id:"communities", n:"03b", label:"Communities", c:"communities"},
+  {g:"Offers", id:"offers", n:"04", label:"Offer Pipeline", c:"offers"},
+  {g:"Offers", id:"approvals", n:"05", label:"Approval Gateway"},
+  {g:"Publish", id:"content", n:"06", label:"Content Studio", c:"content"},
+  {g:"Publish", id:"social", n:"07", label:"Social & Creatives", c:"social"},
+  {g:"Publish", id:"structure", n:"06b", label:"Site Structure", c:"plans"},
+  {g:"Customers", id:"chatbot", n:"08", label:"Chatbot", c:"chats"},
+  {g:"Customers", id:"crm", n:"09", label:"Customer Database", c:"contacts"},
+  {g:"Customers", id:"segments", n:"10", label:"Segments & Leads"},
+  {g:"Customers", id:"email", n:"11", label:"Email Marketing", c:"campaigns"},
+  {g:"Learn", id:"analytics", n:"12", label:"Analytics", c:"metrics"},
+  {g:"Learn", id:"learning", n:"13", label:"Learning Engine", c:"insights"},
+  {g:"Setup", id:"setup", n:"⚙", label:"Integrations & Plan"},
+];
+const COLLS = ["research","ads","competitors","offers","content","social","contacts","campaigns","metrics","insights","audit","platforms","chats","phases","tasks","communities","plans","creatives"];
+const S = {}; COLLS.forEach(c => S[c] = new Map());
+let DB = null, SAMPLE = null, USER = null, dbState = "connecting", view = "dashboard";
+let modalOpen = false, dirty = false;
+/* Server mode: the console is served by the MWC 360 platform at /admin and talks to its API. */
+const API_MODE = location.pathname.startsWith("/admin");
+let TOKEN = null;
+async function apiFetch(method, path, body){
+  const res = await fetch(path, {method, headers:{"Content-Type":"application/json", Authorization:"Bearer "+TOKEN}, body: body===undefined?undefined:JSON.stringify(body)});
+  const data = await res.json().catch(()=>({}));
+  if (res.status===401) { try{localStorage.removeItem("mwc360_token");}catch(e){} }
+  if (!res.ok) throw new Error(data.error || ("HTTP "+res.status));
+  return data;
+}
+async function reloadColl(c){ if (c==="audit") { const a = await apiFetch("GET","/api/audit?limit=300"); S.audit = new Map(a.map(x=>[x.id,x])); return; } const rows = await apiFetch("GET","/api/"+c+"?limit=5000"); S[c] = new Map(rows.map(r=>[r.id,r])); }
+async function reloadAll(){ await Promise.all(COLLS.map(c=>reloadColl(c).catch(()=>{}))); scheduleRender(); }
+
+/* ---------- helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const now = () => new Date().toISOString();
+const day = iso => iso ? String(iso).slice(0,10) : "";
+const all = c => [...S[c].values()].sort((a,b) => String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||"")));
+const byId = (c,id) => S[c].get(id);
+const count = (arr, fn) => arr.reduce((m,x) => { const k = fn(x); if (k) (Array.isArray(k)?k:[k]).forEach(kk => m[kk]=(m[kk]||0)+1); return m; }, {});
+const clean = o => JSON.parse(JSON.stringify(o));
+function toast(t){ const el=document.createElement("div"); el.className="toast"; el.textContent=t; document.body.append(el); setTimeout(()=>el.remove(),2600); }
+const exTag = o => o.example ? ` <span class="pill ex" title="Example record — replace with real data">example</span>` : "";
+
+/* ---------- persistence ---------- */
+async function save(c, obj){
+  if (API_MODE) {
+    if (c==="audit") return obj;
+    try {
+      const isNew = !obj.id || !S[c].has(obj.id);
+      const r = isNew ? await apiFetch("POST","/api/"+c, obj) : await apiFetch("PATCH",`/api/${c}/${obj.id}`, obj);
+      S[c].set(r.id, r); scheduleRender(); return r;
+    } catch(e){ setTimeout(()=>toast(e.message), 300); return null; }
+  }
+  obj.id = obj.id || uid(); obj.updatedAt = now(); obj.createdAt = obj.createdAt || obj.updatedAt;
+  const body = clean(obj);
+  S[c].set(obj.id, body);
+  if (DB) { try { await DB.collection(c).doc(obj.id).set(body); } catch(e){ toast(e.code==="quota_exceeded" ? "Storage is full — delete old records first." : "Could not save: " + (e.message||e.code)); } }
+  else persistLocal();
+  scheduleRender();
+  return body;
+}
+async function del(c, id){
+  if (API_MODE) { try { await apiFetch("DELETE",`/api/${c}/${id}`); S[c].delete(id); scheduleRender(); } catch(e){ toast(e.message); } return; }
+  S[c].delete(id);
+  if (DB) { try { await DB.collection(c).doc(id).delete(); } catch(e){ toast("Could not delete: " + (e.message||e.code)); } }
+  else persistLocal();
+  scheduleRender();
+}
+/* Local mode (no shared database): keep data in this browser */
+function persistLocal(){ LS.set("mwc360_data", JSON.stringify(Object.fromEntries(COLLS.map(c => [c, [...S[c].values()]])))); }
+function loadLocal(){
+  let d = null; try { d = JSON.parse(LS.get("mwc360_data") || "null"); } catch(e){}
+  if (d) { COLLS.forEach(c => { S[c] = new Map((d[c]||[]).map(o => [o.id, o])); }); return; }
+  // first run: the platform register and build plan from the brief
+  [["awin","Awin","Nutra","To verify","Verify account & programme access; identify API and report exports."],["digistore24","Digistore24","Nutra","To verify","Verify access; check per-vendor approval and traffic restrictions."],["clickbank","ClickBank","Nutra","To verify","Verify access; confirm available API and data export."],["chewy-impact","Chewy via Impact","Pet","To verify","Verify programme access in Impact; check promotional rules."],["petco","Petco (via Impact)","Pet","Rejected","Signup application was rejected. Keep inactive unless a new application is approved."],["zooplus","Zooplus","Pet","To confirm","Affiliate account and access route need confirmation."]]
+    .forEach(([id,name,vertical,accountStatus,notes]) => S.platforms.set(id, {id,name,vertical,accountStatus,notes,api:"Unknown",twoFA:false,vault:"Encrypted vault",createdAt:now()}));
+  [["1","Architecture & foundation","Preeti + Sanjay"],["2","Market intelligence & affiliate management","Preeti"],["3","Website content automation","Preeti + Sanjay"],["4","Social media & advertising intelligence","Preeti + Sanjay"],["5","Chatbot & customer intelligence","Preeti + Sanjay"],["6","Email marketing","Preeti + Sanjay"],["7","Analytics & continuous optimisation","Sanjay + Preeti"]]
+    .forEach(([n,title,owner]) => S.phases.set("p"+n, {id:"p"+n,n,title,owner,status:"Not started",scope:"",acceptance:"See README / brief section 12–13."}));
+  persistLocal();
+}
+async function audit(action, ref, detail){ await save("audit", {action, ref, detail, by: whoName}); }
+let whoName = "Team member";
+
+/* ---------- AI wrapper ----------
+   Inside Claude: the `sample` capability.
+   Outside Claude (file opened locally / self-hosted test): the Anthropic API with a key the
+   user enters, kept only in this browser. For production, route through your own backend. */
+const LS = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v); } catch(e){} } };
+let KEY_AI = null;
+function makeApiSampler(){
+  const call = async (input, opts={}) => { const prompt = typeof input==="string" ? input : input.map(t=>(t.role==="user"?"":"Assistant: ")+t.content).join("\n\n"); const r = await apiFetch("POST","/api/ai/complete",{prompt, tier:opts.modelTier==="quick"?"quick":"default"}).catch(e=>{ throw {code:"upstream_error", message:e.message}; }); opts.onText && opts.onText({text:r.text, delta:r.text}); return {text:r.text, truncated:false}; };
+  call.json = async (input, opts={}) => (await apiFetch("POST","/api/ai/json",{prompt:input, tier:opts.modelTier==="quick"?"quick":"default"}).catch(e=>{ throw {code:"upstream_error", message:e.message}; })).value;
+  return call;
+}
+function loadKeyAi(){ if (API_MODE) { KEY_AI = makeApiSampler(); return; } const k = LS.get("mwc360_api_key"); KEY_AI = k ? makeKeySampler(k, LS.get("mwc360_model") || "claude-sonnet-5-5") : null; }
+function makeKeySampler(key, model){
+  async function call(input, opts={}){
+    let msgs = typeof input === "string" ? [{role:"user", content:input}] : input.map(t=>({role:t.role, content:t.content}));
+    const merged = []; msgs.forEach(m => { const last = merged[merged.length-1]; if (last && last.role===m.role) last.content += "\n\n" + m.content; else merged.push({...m}); });
+    let res;
+    try {
+      res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", signal: opts.signal,
+        headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        body: JSON.stringify({model: opts.modelTier==="quick" ? (LS.get("mwc360_model_quick") || "claude-haiku-5-5") : model, max_tokens: 4096, messages: merged}) });
+    } catch(e){ throw {code: e.name==="AbortError" ? "cancelled" : "network", message: String(e.message||e)}; }
+    if (!res.ok) { let msg = ""; try { msg = (await res.json()).error?.message || ""; } catch(e){} throw {code: res.status===401||res.status===403 ? "bad_key" : res.status===429 ? "rate_limited" : "upstream_error", message: msg || ("HTTP " + res.status)}; }
+    const data = await res.json();
+    const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+    if (!text) throw {code:"empty_completion", message:"Empty reply"};
+    opts.onText && opts.onText({text, delta:text});
+    return {text, truncated: data.stop_reason==="max_tokens"};
+  }
+  call.json = async (input, opts={}) => {
+    const {text} = await call(input + "\n\nReply with only the JSON value, no other text.", opts);
+    const tries = [text, (text.match(/```(?:json)?\s*([\s\S]*?)```/)||[])[1], text.slice(Math.min(...["{","["].map(c=>{const i=text.indexOf(c);return i<0?1e9:i;})), Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"))+1)];
+    for (const t of tries) { if (!t) continue; try { return JSON.parse(t); } catch(e){} }
+    throw {code:"invalid_json", message:"Could not parse JSON", text};
+  };
+  return call;
+}
+function aiEngine(){ return SAMPLE || KEY_AI; }
+function aiReady(){ return !!aiEngine(); }
+async function ai(prompt, opts={}){
+  const f = aiEngine(); if (!f) throw {code:"unavailable"};
+  return f(prompt, opts);
+}
+async function aiJson(prompt, opts={}){
+  const f = aiEngine(); if (!f) throw {code:"unavailable"};
+  return f.json(prompt, opts);
+}
+function aiSetupDialog(){
+  openModal(`<h2>Connect AI</h2>
+    <p class="muted" style="margin:0">Inside Claude, AI works automatically. When this file runs on its own (opened from the zip or on your server for testing), enter an Anthropic API key. It is stored only in this browser.</p>
+    <div class="note bad">For testing only. For the live website, put the key on Preeti's backend server, never in a public web page.</div>
+    <div class="form">
+      <label class="f wide">Anthropic API key<input id="kKey" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(LS.get("mwc360_api_key")||"")}"></label>
+      <label class="f">Main model<input id="kModel" value="${esc(LS.get("mwc360_model")||"claude-sonnet-5-5")}"></label>
+      <label class="f">Fast model (chatbot)<input id="kQuick" value="${esc(LS.get("mwc360_model_quick")||"claude-haiku-5-5")}"></label>
+    </div><div id="kOut"></div>
+    <div class="row" style="justify-content:space-between"><button class="btn danger" id="kClear">Remove key</button><div class="row"><button class="btn" data-close>Cancel</button><button class="btn p" id="kSave">Save & test</button></div></div>`, () => {
+    $("#kClear").onclick = () => { LS.set("mwc360_api_key", null); loadKeyAi(); closeModal(); render(); toast("Key removed"); };
+    $("#kSave").onclick = async () => {
+      LS.set("mwc360_api_key", $("#kKey").value.trim() || null); LS.set("mwc360_model", $("#kModel").value.trim() || null); LS.set("mwc360_model_quick", $("#kQuick").value.trim() || null);
+      loadKeyAi(); if (!KEY_AI) { $("#kOut").innerHTML = `<div class="note bad">Enter a key.</div>`; return; }
+      $("#kOut").innerHTML = `<div class="note">Testing…</div>`;
+      try { await KEY_AI("Reply with the single word OK.", {modelTier:"quick"}); closeModal(); render(); toast("AI connected"); }
+      catch(e){ $("#kOut").innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; }
+    };
+  });
+}
+function aiErr(e){
+  const m = {not_granted:"AI access was declined for this page.", rate_limited:"Too many AI requests — wait a minute and try again.", refused:"Claude declined this request. Rephrase and try again.", invalid_json:"The AI reply could not be read. Try again.", sampling_disabled:"Claude is not available for this account.", unavailable:"AI is not connected. Open this page in Claude, or use Connect AI with an API key.", session_expired:"Sign in again to use AI.", bad_key:"The API key was rejected. Check it and try again.", network:"Could not reach the AI service. Check your connection (browsers block this when the page is inside Claude — there AI works without a key)."};
+  return m[e?.code] || ("AI request failed" + (e?.message ? ": " + e.message : "."));
+}
+const BRAND_RULES = `You work for My Wellness Community (MWC, mywellnesscommunity.com), an affiliate marketing site for human wellness (nutraceuticals/supplements) and pet wellness/pet food, targeting the USA, UK and selected European markets.
+Hard rules: never invent reviews, testimonials, customer experiences, ratings, prices or clinical evidence. Do not claim a supplement cures, treats or prevents disease. Mark anything that needs verification as [VERIFY]. Include affiliate disclosure where content promotes an offer. Respect platform terms of service.`;
+
+/* ---------- snapshot of the whole system (input to AI) ---------- */
+function systemSnapshot(limit=12){
+  const pick = (c, fields) => all(c).slice(0,limit).map(o => Object.fromEntries(fields.map(f => [f, o[f]])));
+  return JSON.stringify({
+    research: pick("research",["title","category","vertical","market","finding","confidence"]),
+    ads: pick("ads",["brand","platform","format","duration","hook","pain","trigger","cta","vertical"]),
+    competitors: pick("competitors",["name","vertical","features","notes"]),
+    offers: pick("offers",["name","network","vertical","category","markets","status","score","demandEvidence"]),
+    content: pick("content",["title","type","vertical","status","offerId","keywords"]),
+    social: pick("social",["platform","status","reach","clicks","caption"]),
+    customerNeeds: count(all("contacts"), c => c.needs ? c.needs.split(/[,;]/).map(s=>s.trim().toLowerCase()).filter(Boolean) : null),
+    customerInterests: count(all("contacts"), c => c.interests || []),
+    segments: segmentSummary(),
+    campaigns: pick("campaigns",["name","type","segment","status","sent","opens","clicks","unsubs"]),
+    metrics: pick("metrics",["date","page","source","sessions","clicks","conversions"]),
+    chatInsights: pick("insights",["text","kind","source","status"]),
+  });
+}
+
+/* ---------- field schemas (generic forms) ---------- */
+const V_OPTS = ["Nutra","Pet","Both"];
+const MKT_OPTS = ["USA","UK","EU","USA+UK","All"];
+const SCHEMA = {
+  research:[
+    {k:"title",l:"Finding title",t:"text",req:1},
+    {k:"category",l:"Category",t:"select",o:["Market size","Trends & growth","Demographics","Customer needs","Search & keywords","Competitor","Advertising","Social communities","Emerging products"]},
+    {k:"vertical",l:"Vertical",t:"select",o:V_OPTS},{k:"market",l:"Market",t:"select",o:MKT_OPTS},
+    {k:"confidence",l:"Confidence",t:"select",o:["Low","Medium","High"]},
+    {k:"source",l:"Source link",t:"url"},
+    {k:"finding",l:"Finding / evidence",t:"textarea",wide:1},
+    {k:"researcher",l:"Added by",t:"text"},
+  ],
+  ads:[
+    {k:"brand",l:"Advertiser",t:"text",req:1},
+    {k:"platform",l:"Platform",t:"select",o:["Meta (FB/IG)","TikTok","YouTube","Google Search","Pinterest","Native","Email"]},
+    {k:"format",l:"Format",t:"select",o:["Video","UGC video","Static image","Carousel","Story/Reel","Text/Search","Advertorial"]},
+    {k:"duration",l:"Video length (sec)",t:"number"},
+    {k:"vertical",l:"Vertical",t:"select",o:V_OPTS},
+    {k:"hook",l:"Opening hook",t:"text",wide:1},
+    {k:"pain",l:"Pain point addressed",t:"text"},{k:"trigger",l:"Emotional trigger",t:"select",o:["Fear/worry","Relief","Aspiration","Curiosity","Social proof","Urgency","Love for pet","Authority"]},
+    {k:"story",l:"Storytelling technique",t:"select",o:["Problem → solution","Before/after","Founder story","Expert explainer","Listicle","Testimonial style","Demo"]},
+    {k:"cta",l:"Call to action",t:"text"},
+    {k:"landing",l:"Landing page type",t:"select",o:["Product page","Advertorial","Quiz funnel","VSL","Comparison page","Lead magnet"]},
+    {k:"source",l:"Ad library link",t:"url"},
+    {k:"perf",l:"Signals of success",t:"text",wide:1,ph:"e.g. running 90+ days, many variants"},
+  ],
+  competitors:[
+    {k:"name",l:"Website name",t:"text",req:1},{k:"url",l:"URL",t:"url"},{k:"vertical",l:"Vertical",t:"select",o:V_OPTS},
+    {k:"features",l:"Features observed",t:"multi",wide:1,o:["Need-based navigation","Product grids","Detailed reviews","Comparison tables","Buying guides","Quiz / product finder","Lead magnet","Email popup","Bonus offers","Topic-cluster blog","Expert reviewer bios","Star ratings","Deals page","Chatbot","Community/forum","Video content"]},
+    {k:"notes",l:"Structure, UX & positioning notes",t:"textarea",wide:1},
+    {k:"gaps",l:"Content gaps we can fill",t:"textarea",wide:1},
+  ],
+  offers:[
+    {k:"name",l:"Offer / product",t:"text",req:1},
+    {k:"network",l:"Network / programme",t:"select",o:["Awin","Digistore24","ClickBank","Chewy (Impact)","Petco (Impact)","Zooplus","Direct programme","Other"]},
+    {k:"vertical",l:"Vertical",t:"select",o:V_OPTS},{k:"category",l:"Category",t:"text"},
+    {k:"markets",l:"Markets",t:"select",o:MKT_OPTS},
+    {k:"commission",l:"Commission terms",t:"text"},{k:"metric",l:"EPC / gravity / AOV",t:"text"},
+    {k:"reputation",l:"Brand reputation & verifiable ratings",t:"text",wide:1},
+    {k:"traffic",l:"Permitted traffic sources",t:"text",wide:1},
+    {k:"materials",l:"Promotional material available",t:"select",o:["Unknown","Yes","No"]},
+    {k:"demandEvidence",l:"Demand evidence (research / chatbot / search)",t:"textarea",wide:1},
+    {k:"url",l:"Programme link",t:"url"},
+    {k:"notes",l:"Notes",t:"textarea",wide:1},
+  ],
+  content:[
+    {k:"title",l:"Title",t:"text",req:1},
+    {k:"type",l:"Content type",t:"select",o:["Homepage section","Category page","Product description","Product review","Comparison","Buying guide","Brand page","Educational blog","FAQ","Landing page","Lead magnet","Banner/graphic brief","Infographic brief","Video script","Downloadable resource"]},
+    {k:"vertical",l:"Vertical",t:"select",o:V_OPTS},
+    {k:"offerId",l:"Linked offer",t:"offer"},
+    {k:"status",l:"Status",t:"select",o:["Idea","Draft","In review","Approved","Published","Needs update","Retired"]},
+    {k:"keywords",l:"Target keywords",t:"text"},{k:"wpUrl",l:"Live URL (WordPress)",t:"url"},
+    {k:"body",l:"Body / brief",t:"textarea",wide:1,big:1},
+    {k:"factsVerified",l:"Product facts, prices & claims verified by a person",t:"check",wide:1},
+  ],
+  social:[
+    {k:"platform",l:"Platform",t:"select",o:["Facebook","Instagram","Pinterest","YouTube","TikTok","X","LinkedIn"]},
+    {k:"format",l:"Format",t:"select",o:["Post","Reel/Short","Story","Pin","Carousel","Video"]},
+    {k:"contentId",l:"Source website content",t:"content"},
+    {k:"date",l:"Planned date",t:"date"},
+    {k:"status",l:"Status",t:"select",o:["Planned","Ready","Scheduled","Posted"]},
+    {k:"link",l:"Website link (UTM)",t:"url"},
+    {k:"caption",l:"Caption / script",t:"textarea",wide:1},
+    {k:"reach",l:"Reach",t:"number"},{k:"engagement",l:"Engagements",t:"number"},{k:"clicks",l:"Link clicks",t:"number"},
+  ],
+  contacts:[
+    {k:"name",l:"Name",t:"text"},{k:"email",l:"Email",t:"text"},{k:"country",l:"Country / market",t:"select",o:["USA","UK","Germany","France","Netherlands","Ireland","Other EU","Other"]},
+    {k:"vertical",l:"Interest area",t:"select",o:V_OPTS},
+    {k:"interests",l:"Interests (comma separated)",t:"tags",wide:1},
+    {k:"needs",l:"Needs / problems stated",t:"textarea",wide:1},
+    {k:"source",l:"Lead source",t:"select",o:["Chatbot","Subscription form","Contact form","Enquiry","Newsletter","Lead magnet","Other"]},
+    {k:"stage",l:"Lifecycle stage",t:"select",o:["New","Engaged","Qualified","Clicked offer","Dormant","Unsubscribed"]},
+    {k:"engagement",l:"Engagement score (0–100)",t:"number"},
+    {k:"followUp",l:"Follow-up due",t:"date"},
+    {k:"consentEmail",l:"Has given consent to receive email (record date & source)",t:"check",wide:1},
+    {k:"consentNote",l:"Consent record (wording, date, page)",t:"text",wide:1},
+    {k:"notes",l:"Notes",t:"textarea",wide:1},
+  ],
+  campaigns:[
+    {k:"name",l:"Campaign / sequence",t:"text",req:1},
+    {k:"type",l:"Type",t:"select",o:["Welcome / onboarding","Educational sequence","Newsletter","Product communication","Follow-up","Re-engagement","Segmented campaign"]},
+    {k:"segment",l:"Target segment",t:"segment"},
+    {k:"status",l:"Status",t:"select",o:["Draft","Approved","Synced to platform","Sending","Sent"]},
+    {k:"subject",l:"Subject line",t:"text",wide:1},
+    {k:"body",l:"Email body",t:"textarea",wide:1,big:1},
+    {k:"sent",l:"Sent",t:"number"},{k:"opens",l:"Opens",t:"number"},{k:"clicks",l:"Clicks",t:"number"},{k:"unsubs",l:"Unsubscribes",t:"number"},
+  ],
+  metrics:[
+    {k:"date",l:"Date / period",t:"date"},
+    {k:"source",l:"Source",t:"select",o:["GA4","Search Console","Meta Pixel","Social","Ads","Email","Chatbot","Website"]},
+    {k:"page",l:"Page / campaign / creative",t:"text",wide:1},
+    {k:"sessions",l:"Sessions / impressions",t:"number"},{k:"engaged",l:"Engaged sessions",t:"number"},
+    {k:"clicks",l:"Clicks (incl. affiliate)",t:"number"},{k:"conversions",l:"Conversions / sign-ups",t:"number"},
+    {k:"notes",l:"Notes",t:"text",wide:1},
+  ],
+  communities:[
+    {k:"name",l:"Community / group / account",t:"text",req:1},
+    {k:"platform",l:"Platform",t:"select",o:["Facebook group","Instagram account","Reddit","YouTube","TikTok account","Forum","Pinterest","Other"]},
+    {k:"url",l:"Link",t:"url"},{k:"vertical",l:"Vertical",t:"select",o:V_OPTS},
+    {k:"audience",l:"Members / followers",t:"number"},{k:"relevance",l:"Relevance (0–100)",t:"number"},
+    {k:"approach",l:"Approach",t:"select",o:["listen","engage","avoid"]},
+    {k:"audienceNeeds",l:"What members need / discuss",t:"textarea",wide:1},
+    {k:"rules",l:"Self-promotion rules",t:"text",wide:1},
+  ],
+  platforms:[
+    {k:"name",l:"Platform",t:"text",req:1},{k:"vertical",l:"Vertical",t:"select",o:V_OPTS},
+    {k:"accountStatus",l:"Account / programme status",t:"select",o:["To verify","Active","Pending","Rejected","To confirm","Inactive"]},
+    {k:"api",l:"API / data export",t:"select",o:["Unknown","API available","Reports export only","Manual only"]},
+    {k:"twoFA",l:"Two-factor authentication enabled",t:"check"},
+    {k:"vault",l:"Where credentials are kept (never paste passwords here)",t:"text",wide:1,ph:"e.g. 1Password vault 'MWC Affiliates'"},
+    {k:"restrictions",l:"Approval & promotional restrictions",t:"textarea",wide:1},
+    {k:"notes",l:"Notes",t:"textarea",wide:1},
+  ],
+};
+
+/* ---------- offer status machine (human approval gateway) ---------- */
+const OFFER_STATUSES = ["Discovered","Under evaluation","Shortlisted","Approval pending","Approved","Active","Paused","Rejected","Expired / withdrawn"];
+const OFFER_NEXT = {
+  "Discovered":["Under evaluation","Rejected"],
+  "Under evaluation":["Shortlisted","Rejected"],
+  "Shortlisted":["Approval pending","Rejected"],
+  "Approval pending":["Approved","Rejected"],
+  "Approved":["Active","Paused","Rejected"],
+  "Active":["Paused","Expired / withdrawn","Rejected"],
+  "Paused":["Active","Expired / withdrawn","Rejected"],
+  "Rejected":["Under evaluation"],
+  "Expired / withdrawn":["Under evaluation"],
+};
+const statusTone = s => ({"Active":"good","Approved":"acc","Approval pending":"warn","Shortlisted":"info","Under evaluation":"info","Discovered":"mute","Paused":"warn","Rejected":"bad","Expired / withdrawn":"bad",
+  "Published":"good","Approved ":"acc","In review":"warn","Draft":"info","Idea":"mute","Needs update":"warn","Retired":"mute",
+  "Posted":"good","Scheduled":"acc","Ready":"info","Planned":"mute","Sent":"good","Synced to platform":"acc","Sending":"acc",
+  "Open":"warn","Actioned":"good","Dismissed":"mute","Done":"good","In progress":"warn","Not started":"mute"}[s] || "mute");
+const pill = s => `<span class="pill ${statusTone(s)}">${esc(s||"—")}</span>`;
+const vpill = v => v ? `<span class="pill ${v==="Pet"?"pet":v==="Nutra"?"acc":"info"}">${esc(v)}</span>` : "";
+const isActiveOffer = o => o && o.status === "Active";
+
+/* ---------- segmentation (rule-based, recomputed live) ---------- */
+function engagementBand(c){ const e = Number(c.engagement)||0; return e>=60?"High engagement":e>=25?"Medium engagement":"Low engagement"; }
+function segmentsOf(c){
+  const s = [];
+  if (c.vertical==="Nutra"||c.vertical==="Both") s.push("Nutra wellness");
+  if (c.vertical==="Pet"||c.vertical==="Both") s.push("Pet wellness");
+  if (c.country==="USA") s.push("Market: USA"); else if (c.country==="UK") s.push("Market: UK"); else if (c.country) s.push("Market: Europe/Other");
+  s.push(engagementBand(c));
+  (c.interests||[]).forEach(i => s.push("Interest: " + i.toLowerCase()));
+  if (c.consentEmail && !c.suppressed && c.stage!=="Unsubscribed") s.push("Emailable");
+  if (c.stage==="Dormant") s.push("Re-engagement");
+  if (c.followUp && c.followUp <= day(now())) s.push("Follow-up due");
+  return s;
+}
+function segmentSummary(){ return count(all("contacts"), segmentsOf); }
+const emailable = c => c.consentEmail && !c.suppressed && c.stage!=="Unsubscribed" && /@/.test(c.email||"");
+
+/* ---------- rule-based learning signals (work without AI) ---------- */
+function ruleSignals(){
+  const out = [];
+  const offers = all("offers"), content = all("content"), contacts = all("contacts");
+  offers.filter(o=>o.status==="Approved").forEach(o => out.push({p:1, t:`“${o.name}” is approved but not active`, w:"Verify promotional permissions and send the activation signal in the Approval Gateway.", go:"approvals"}));
+  offers.filter(o=>o.status==="Shortlisted").forEach(o => out.push({p:2, t:`Apply to ${o.network} for “${o.name}”`, w:`Shortlisted${o.score?` with score ${o.score}`:""}. Apply manually, then set status to Approval pending.`, go:"approvals"}));
+  content.filter(c=>c.offerId && !isActiveOffer(byId("offers",c.offerId)) && ["Approved","Published"].includes(c.status)).forEach(c => out.push({p:1, t:`“${c.title}” promotes an offer that is not active`, w:"Unpublish or relink this content — inactive offers must not be promoted.", go:"content"}));
+  content.filter(c=>c.status==="Needs update").forEach(c => out.push({p:2, t:`Refresh “${c.title}”`, w:"Marked as needing update.", go:"content"}));
+  content.filter(c=>c.status==="In review").forEach(c => out.push({p:3, t:`Review “${c.title}”`, w: c.factsVerified ? "Facts verified — ready to approve." : "Facts and claims not yet verified by a person.", go:"content"}));
+  const activeOffers = offers.filter(isActiveOffer);
+  activeOffers.forEach(o => { if (!content.some(c=>c.offerId===o.id)) out.push({p:2, t:`Active offer “${o.name}” has no website content`, w:"Generate a review, comparison or buying guide in Content Studio.", go:"content"}); });
+  const needs = count(contacts, c => (c.interests||[]).map(x=>x.toLowerCase()));
+  Object.entries(needs).sort((a,b)=>b[1]-a[1]).slice(0,4).forEach(([k,n]) => {
+    const hasOffer = offers.some(o => (o.category+" "+o.name).toLowerCase().includes(k) && ["Active","Approved","Approval pending","Shortlisted"].includes(o.status));
+    const hasContent = content.some(c => (c.title+" "+(c.keywords||"")).toLowerCase().includes(k));
+    if (!hasOffer) out.push({p:2, t:`${n} customer(s) interested in “${k}” — no offer in pipeline`, w:"Run offer discovery for this need.", go:"offers"});
+    if (!hasContent) out.push({p:3, t:`No website content covers “${k}”`, w:"Customer interest without matching content is a content gap.", go:"content"});
+  });
+  const due = contacts.filter(c => c.followUp && c.followUp <= day(now()) && c.stage!=="Unsubscribed");
+  if (due.length) out.push({p:2, t:`${due.length} lead follow-up(s) due`, w:"Open Segments & Leads → Follow-up due.", go:"segments"});
+  const noConsent = contacts.filter(c => c.email && !c.consentEmail).length;
+  if (noConsent) out.push({p:3, t:`${noConsent} contact(s) have an email but no consent record`, w:"They are excluded from email sync until consent is recorded.", go:"crm"});
+  all("platforms").filter(p=>p.accountStatus==="To confirm"||p.accountStatus==="To verify").forEach(p => out.push({p:3, t:`Confirm ${p.name} account access`, w:p.notes||"Verify programme access and available APIs.", go:"setup"}));
+  return out.sort((a,b)=>a.p-b.p);
+}
+
+/* ---------- rendering ---------- */
+let renderQueued = false;
+function scheduleRender(){ if (modalOpen || (view==="chatbot" && (CHAT.turns.length || CHAT.busy || document.activeElement?.id==="chatIn"))) { dirty = true; renderRail(); return; } if (renderQueued) return; renderQueued = true; requestAnimationFrame(()=>{ renderQueued=false; render(); }); }
+function renderRail(){
+  let html = `<div class="brand">MWC 360<small>mywellnesscommunity.com</small></div>`;
+  let g = null;
+  MODULES.forEach(m => {
+    if (m.g !== g) { if (g) html += `</div>`; html += `<div class="navgrp"><h6>${m.g}</h6>`; g = m.g; }
+    const c = m.c ? S[m.c].size : (m.id==="approvals" ? all("offers").filter(o=>["Shortlisted","Approval pending","Approved"].includes(o.status)).length : "");
+    html += `<button class="nav ${view===m.id?"on":""}" data-go="${m.id}"><span class="n">${m.n}</span>${m.label}<span class="c">${c||""}</span></button>`;
+  });
+  html += `</div><div class="navgrp"><h6>Status</h6><div class="status" style="padding:0 8px">Data: ${esc(dbState)}<br>AI: ${API_MODE?"server":SAMPLE?"Claude":KEY_AI?"API key":"not connected"}</div>${SAMPLE||API_MODE?"":`<button class="nav" data-act="connectAi" style="margin-top:6px"><span class="n">✦</span>Connect AI</button>`}</div>`;
+  $("#rail").innerHTML = html;
+  $("#mnavSel").innerHTML = MODULES.map(m => `<option value="${m.id}" ${view===m.id?"selected":""}>${m.n} ${m.label}</option>`).join("");
+}
+function go(id){ if (!MODULES.some(m=>m.id===id)) id="dashboard"; view = id; if (location.hash.slice(1)!==id) { try{ history.replaceState(null,"","#"+id);}catch(e){ location.hash=id; } } render(); window.scrollTo(0,0); }
+function render(){ dirty=false; renderRail(); const fn = VIEWS[view] || VIEWS.dashboard; $("#view").innerHTML = fn(); bindView(); }
+
+function header(eyebrow, title, desc, actions=""){
+  return `<div class="head"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1>${desc?`<p>${desc}</p>`:""}</div><div class="row">${actions}</div></div>`;
+}
+function emptyState(title, text, action=""){ return `<div class="empty"><b>${esc(title)}</b>${text}${action?`<div style="margin-top:12px">${action}</div>`:""}</div>`; }
+function loadingNote(){ return dbState==="connecting" ? `<div class="note">Connecting to the shared database…</div>` : dbState.startsWith("local") && !API_MODE ? `<div class="note">Running outside Claude: data is saved in this browser only (not shared with the team).${aiReady()?"":` AI is off — <button class="btn s" data-act="connectAi">Connect AI</button>`}</div>` : ""; }
+
+/* generic table */
+function table(cols, rows, actions){
+  if (!rows.length) return "";
+  return `<div class="tbl"><table><thead><tr>${cols.map(c=>`<th>${c.h}</th>`).join("")}${actions?"<th></th>":""}</tr></thead><tbody>${
+    rows.map(r => `<tr>${cols.map(c=>`<td class="${c.num?"num":""}">${c.f(r)}</td>`).join("")}${actions?`<td style="white-space:nowrap">${actions(r)}</td>`:""}</tr>`).join("")
+  }</tbody></table></div>`;
+}
+
+/* ---------- VIEWS ---------- */
+const LOOP = [
+  ["Secondary research","research","research"],["Ad intelligence","ads","ads"],["Competitor analysis","competitors","competitors"],
+  ["Offer discovery","offers","offers"],["Human approval","approvals",null],["Content generation","content","content"],
+  ["Website publishing","content",null],["Social promotion","social","social"],["Visitor engagement","analytics",null],
+  ["Chatbot research","chatbot","chats"],["Customer database","crm","contacts"],["Segmentation","segments",null],
+  ["Email marketing","email","campaigns"],["Analytics","analytics","metrics"],["Updated intelligence","learning","insights"],
+];
+const VIEWS = {};
+
+VIEWS.dashboard = () => {
+  const offers = all("offers"), content = all("content"), contacts = all("contacts");
+  const st = count(offers, o=>o.status);
+  const colors = {"Discovered":"var(--muted)","Under evaluation":"var(--info)","Shortlisted":"var(--info)","Approval pending":"var(--warn)","Approved":"var(--accent)","Active":"var(--good)","Paused":"var(--warn)","Rejected":"var(--bad)","Expired / withdrawn":"var(--bad)"};
+  const total = offers.length || 1;
+  const sig = ruleSignals().slice(0,8);
+  const openIns = all("insights").filter(i=>i.status!=="Dismissed"&&i.status!=="Actioned").slice(0,5);
+  const published = content.filter(c=>c.status==="Published").length;
+  const live = LOOP.map(([l,goId,c],i)=>`<div class="st" data-go="${goId}"><b>${l}</b><span>${c?S[c].size+" records":"gateway"}</span></div>${i<LOOP.length-1?'<span class="ar">→</span>':''}`).join("") + `<span class="ar">↺</span><div class="st back" data-go="offers"><b>Improved offers & content</b><span>loop restarts</span></div>`;
+  return header("Command Center","MWC 360° operating loop","Every module feeds the next. Research shapes offers, approved offers shape content, customers shape the next round of research.",
+    `<button class="btn ai p" data-act="runLearning" ${aiReady()?"":"disabled"}>Run learning cycle</button>`) +
+  loadingNote() +
+  `<div class="grid g4">
+    <div class="card stat"><div class="v">${S.research.size + S.ads.size + S.competitors.size}</div><div class="l">Intelligence records</div></div>
+    <div class="card stat"><div class="v">${offers.filter(isActiveOffer).length}<span class="muted" style="font-size:16px"> / ${offers.length}</span></div><div class="l">Active offers / in pipeline</div></div>
+    <div class="card stat"><div class="v">${published}<span class="muted" style="font-size:16px"> / ${content.length}</span></div><div class="l">Pages published / planned</div></div>
+    <div class="card stat"><div class="v">${contacts.filter(emailable).length}<span class="muted" style="font-size:16px"> / ${contacts.length}</span></div><div class="l">Emailable / total contacts</div></div>
+  </div>
+  <div class="card"><h3>The 360° loop <small>click a stage to open it</small></h3><div class="loop">${live}</div></div>
+  <div class="grid g2">
+    <div class="card"><h3>Offer pipeline</h3>
+      ${offers.length ? `<div class="bar">${OFFER_STATUSES.filter(s=>st[s]).map(s=>`<i style="width:${st[s]/total*100}%;background:${colors[s]}" title="${s}: ${st[s]}"></i>`).join("")}</div>
+      <div class="legend">${OFFER_STATUSES.filter(s=>st[s]).map(s=>`<span><i style="background:${colors[s]}"></i>${s} ${st[s]}</span>`).join("")}</div>` : `<p class="muted">No offers yet. Start in Offer Pipeline.</p>`}
+      <div class="note" style="margin-top:12px">Only <b>Active</b> offers can be promoted. Activation needs a person to confirm approval in the Approval Gateway.</div>
+    </div>
+    <div class="card"><h3>Next best actions <small>from live data</small></h3>
+      ${sig.length ? sig.map(s=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line)"><span class="pill ${s.p===1?"bad":s.p===2?"warn":"mute"}">P${s.p}</span><div style="min-width:0;flex:1"><div class="t">${esc(s.t)}</div><div class="sub muted">${esc(s.w)}</div></div><button class="btn s" data-go="${s.go}">Open</button></div>`).join("") : `<p class="muted">Nothing needs attention right now.</p>`}
+    </div>
+  </div>
+  <div class="card"><h3>Open intelligence <small>from chatbot, email and the learning engine</small></h3>
+    ${openIns.length ? openIns.map(i=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="tag">${esc(i.kind||"Insight")}</span><span class="tag">${esc(i.source||"")}</span> ${esc(i.text)}</div>`).join("") : `<p class="muted">Insights appear here after chatbot sessions and learning cycles.</p>`}
+  </div>`;
+};
+
+VIEWS.automation = () => {
+  if (!API_MODE) return header("Automation","Automation & tasks","Scheduled automation runs on the MWC 360 server. Open the console at your server's /admin address to see jobs and run them.","") + emptyState("Not connected to the server","This copy of the console is not running on the MWC 360 server.","");
+  const jobs = AUTO.jobs || []; const open = all("tasks").filter(t=>t.status==="Open");
+  return header("Automation","Automation & tasks","The 360° loop runs on a schedule. Each job's last result is shown; run any job now. Tasks are the steps that need a person.",`<button class="btn" data-act="refreshJobs">Refresh</button>`) +
+  `<div class="card"><h3>Human tasks <small>${open.length} open</small></h3>${open.length? table([
+    {h:"Task",f:t=>`<div class="t">${esc(t.title)}</div><div class="sub">${esc(t.detail||"")}</div>`},{h:"Priority",f:t=>pill(t.priority==="High"?"Open":"Not started").replace(/Open|Not started/, esc(t.priority||""))},{h:"Role",f:t=>esc(t.role||"editor")},
+    {h:"Where",f:t=>t.module?`<button class="btn s" data-go="${esc(t.module)}">${esc((MODULES.find(m=>m.id===t.module)||{}).label||t.module)}</button>`:""},
+  ], open, t=>`<button class="btn s" data-task="${t.id}|Done">Done</button>`) : `<p class="muted">Nothing waiting for a person.</p>`}</div>
+  <div class="card"><h3>Scheduled jobs <small>times in the server's schedule timezone</small></h3>${jobs.length? table([
+    {h:"Job",f:j=>`<div class="t">${esc(j.name)}</div><div class="sub">${esc(j.stage)}</div>`},{h:"Schedule",f:j=>`<code>${esc(j.cron)}</code>`},
+    {h:"Last run",f:j=>j.last?`${pill(j.last.status==="ok"?"Done":j.last.status==="running"?"In progress":"Rejected").replace(/Done|In progress|Rejected/, esc(j.last.status))}<div class="sub">${esc((j.last.finished_at||j.last.started_at||"").replace("T"," ").slice(0,16))}</div>`:"<span class='muted'>never</span>"},
+    {h:"Result",f:j=>`<span class="sub" style="font-family:var(--f-mono)">${esc((j.last?.summary||j.last?.error||"").slice(0,160))}</span>`},
+  ], jobs, j=>`<button class="btn s" data-runjob="${esc(j.name)}" ${j.running?"disabled":""}>Run now</button>`) : `<p class="muted">Loading jobs…</p>`}</div>`;
+};
+const AUTO = {jobs:[]};
+
+VIEWS.communities = () => {
+  const rows = all("communities").sort((a,b)=>(b.relevance||0)-(a.relevance||0)); const f = filters.communities||"";
+  const shown = rows.filter(c=>!f || c.platform===f || (f==="Relevant" && (c.relevance||0)>=60));
+  const plats = [...new Set(rows.map(r=>r.platform).filter(Boolean))];
+  return header("03b · Social audience research","Communities","Reddit communities and YouTube channels are found automatically every week and scored for relevance. Add Facebook groups and Instagram accounts by hand: those platforms have no search API.",
+    `${API_MODE?`<button class="btn" data-runjob="communities.discover">Discover now</button>`:""}<button class="btn p" data-new="communities">Add community</button>`) + loadingNote() +
+  `<div class="tools"><select data-filter="communities"><option value="">All</option><option ${f==="Relevant"?"selected":""}>Relevant</option>${plats.map(p=>`<option ${p===f?"selected":""}>${esc(p)}</option>`).join("")}</select><span class="muted">${shown.length} communities</span></div>` +
+  (shown.length ? table([
+    {h:"Community",f:c=>`<div class="t">${c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>`:esc(c.name)}</div><div class="sub">${esc(String(c.description||"").slice(0,120))}</div>`},
+    {h:"Platform",f:c=>esc(c.platform)},{h:"Vertical",f:c=>vpill(c.vertical)},
+    {h:"Members",num:1,f:c=>Number(c.audience||0).toLocaleString()},{h:"Growth",num:1,f:c=>c.growthPct!=null?esc(c.growthPct)+"%":""},
+    {h:"Relevance",num:1,f:c=>`<b>${esc(c.relevance??"—")}</b>`},
+    {h:"Needs / approach",f:c=>`${esc(c.audienceNeeds||"")}<div class="sub">${esc(c.approach||"")} · ${esc(c.rules||"")}</div>`},
+  ], shown, c=>`<button class="btn s" data-edit="communities:${c.id}">Edit</button>`) : emptyState("No communities yet","Connect Reddit and YouTube in Setup, or add groups you know.",`<button class="btn p" data-new="communities">Add a community</button>`));
+};
+
+VIEWS.structure = () => {
+  const plans = all("plans"); const cur = plans.find(p=>p.status==="Proposed"); const past = plans.filter(p=>p.status!=="Proposed").slice(0,8);
+  const tree = (pl) => { const cats = pl.categories||[]; const top = cats.filter(c=>!c.parent); return top.map(t=>`<div style="margin:4px 0"><b>${esc(t.name)}</b> <span class="tag">${esc(t.kind||"")}</span>${cats.filter(c=>c.parent===t.slug).map(c=>`<div style="margin-left:18px">↳ ${esc(c.name)} <span class="tag">${esc(c.kind||"")}</span></div>`).join("")}</div>`).join(""); };
+  const menu = (pl) => (pl.menu||[]).map(m=>`<div>• ${esc(m.title)}${(m.children||[]).length?`<div style="margin-left:18px">${m.children.map(c=>`◦ ${esc(c.title)}`).join("<br>")}</div>`:""}</div>`).join("");
+  return header("06b · Website structure","Site structure","Each month AI proposes need-based navigation, product categories, category pages and homepage sections, using research, customer needs, search data and competitor patterns. Nothing changes on the website until an approver applies the plan.",
+    API_MODE?`<button class="btn ai p" data-act="proposeStructure">Propose structure now</button>`:"") + loadingNote() +
+  (cur ? `<div class="card"><h3>Proposed plan <small>${esc(day(cur.proposedAt||cur.createdAt))}</small></h3>
+    <div class="flow"><span class="on">${(cur.diff?.newCategories||[]).length} new categories</span><span>${(cur.diff?.keptCategories||[]).length} kept</span><span>${esc(cur.diff?.menuItems||0)} menu items</span><span>${esc(cur.diff?.assignments||0)} post assignments</span></div>
+    <div class="grid g3" style="margin-top:12px"><div><div class="eyebrow">Categories</div>${tree(cur.plan||{})}</div><div><div class="eyebrow">Main menu</div>${menu(cur.plan||{})}</div><div><div class="eyebrow">Homepage & category pages</div>${[...(cur.plan?.homepageSections||[]).map(s=>"Homepage: "+s.title), ...(cur.plan?.categoryPages||[]).map(s=>s.title)].map(t=>`<div>• ${esc(t)}</div>`).join("")}</div></div>
+    ${cur.plan?.rationale?`<p class="muted">${esc(cur.plan.rationale)}</p>`:""}
+    ${API_MODE?`<div class="row" style="margin-top:10px"><button class="btn p" data-plan="${cur.id}|apply">Apply to WordPress</button><button class="btn danger" data-plan="${cur.id}|reject">Reject</button></div><div class="note" style="margin-top:10px">Applying creates the categories, assigns published posts, builds the menu and queues homepage and category-page copy as content drafts for review.</div>`:""}</div>`
+    : emptyState("No plan waiting for approval","The next plan is proposed on the 1st of each month, or click “Propose structure now”.","")) +
+  (past.length ? `<div class="card"><h3>History</h3>${table([{h:"Date",f:p=>esc(day(p.createdAt))},{h:"Status",f:p=>pill(p.status==="Applied"?"Done":p.status==="Rejected"?"Rejected":"Not started").replace(/Done|Rejected|Not started/,esc(p.status))},{h:"Result",f:p=>`<span class="sub">${esc(p.result?JSON.stringify(p.result).slice(0,160):p.reason||"")}</span>`}], past)}</div>` : "");
+};
+
+VIEWS.research = () => {
+  const rows = all("research"); const f = filters.research||"";
+  const shown = rows.filter(r => !f || r.category===f);
+  return header("01 · Market intelligence","Secondary market research","A living repository. External research by Preeti and the team is logged here; the AI synthesises it and the learning engine keeps it current.",
+    `<button class="btn ai" data-act="aiResearch" ${aiReady()&&rows.length?"":"disabled"}>Synthesise findings</button><button class="btn p" data-new="research">Add finding</button>`) + loadingNote() +
+  `<div class="tools"><select data-filter="research"><option value="">All categories</option>${SCHEMA.research[1].o.map(o=>`<option ${o===f?"selected":""}>${o}</option>`).join("")}</select><span class="muted">${shown.length} findings</span></div>` +
+  (shown.length ? table([
+    {h:"Finding",f:r=>`<div class="t">${esc(r.title)}${exTag(r)}</div><div class="sub">${esc((r.finding||"").slice(0,180))}</div>`},
+    {h:"Category",f:r=>esc(r.category)},{h:"Vertical",f:r=>vpill(r.vertical)},{h:"Market",f:r=>esc(r.market)},
+    {h:"Confidence",f:r=>pill(r.confidence)},{h:"Source",f:r=>r.source?`<a href="${esc(r.source)}" target="_blank" rel="noopener">link</a>`:"<span class='muted'>—</span>"},
+  ], shown, r=>`<button class="btn s" data-edit="research:${r.id}">Edit</button>`) : emptyState("No research yet","Log market size, trends, demographics, search intent and community findings.",`<button class="btn p" data-new="research">Add the first finding</button>`)) +
+  `<div id="aiOut"></div>`;
+};
+
+VIEWS.ads = () => {
+  const rows = all("ads");
+  const fmt = count(rows, a=>a.format), trig = count(rows, a=>a.trigger), plat = count(rows, a=>a.platform);
+  const durs = rows.map(a=>Number(a.duration)).filter(Boolean); const avg = durs.length ? Math.round(durs.reduce((a,b)=>a+b,0)/durs.length) : 0;
+  const bars = (obj) => { const mx = Math.max(1,...Object.values(obj)); return Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="hbar"><span class="k">${esc(k)}</span><span class="tr"><i style="width:${v/mx*100}%"></i></span><span class="n">${v}</span></div>`).join("") || `<p class="muted">—</p>`; };
+  return header("02 · Advertising & creative intelligence","Ad library","Ads are collected daily from the Meta Ad Library and TikTok's ad library. Import Google/YouTube ads from the Ads Transparency Center as CSV. Keep the source link so every pattern stays traceable.",
+    `${API_MODE?`<button class="btn" data-act="importAds">Import CSV</button><button class="btn" data-runjob="ads.ingest">Collect now</button>`:""}<button class="btn ai" data-act="aiAds" ${aiReady()&&rows.length?"":"disabled"}>Find patterns & brief creatives</button><button class="btn p" data-new="ads">Log an ad</button>`) + loadingNote() +
+  (rows.length ? `<div class="grid g3"><div class="card"><h3>Formats</h3>${bars(fmt)}</div><div class="card"><h3>Emotional triggers</h3>${bars(trig)}</div><div class="card"><h3>Platforms</h3>${bars(plat)}<p class="muted" style="margin:8px 0 0">Average video length: <b>${avg||"—"}${avg?" s":""}</b></p></div></div>` : "") +
+  (rows.length ? table([
+    {h:"Advertiser / hook",f:a=>`<div class="t">${esc(a.brand)}${exTag(a)}</div><div class="sub">“${esc(a.hook)}”</div>`},
+    {h:"Platform",f:a=>esc(a.platform)},{h:"Format",f:a=>esc(a.format)+(a.duration?` · ${esc(a.duration)}s`:"")},
+    {h:"Pain → trigger",f:a=>`${esc(a.pain)}<div class="sub">${esc(a.trigger)} · ${esc(a.story)}</div>`},
+    {h:"CTA / landing",f:a=>`${esc(a.cta)}<div class="sub">${esc(a.landing)}</div>`},
+    {h:"Source",f:a=>a.source?`<a href="${esc(a.source)}" target="_blank" rel="noopener">view</a>`:"—"},
+  ], rows, a=>`<button class="btn s" data-edit="ads:${a.id}">Edit</button>`) : emptyState("No ads logged","Record hook, format, duration, pain point, trigger, CTA and landing page for each ad you study.",`<button class="btn p" data-new="ads">Log the first ad</button>`)) + `<div id="aiOut"></div>`;
+};
+
+VIEWS.competitors = () => {
+  const rows = all("competitors");
+  const feat = count(rows, c=>c.features||[]); const mx = Math.max(1,...Object.values(feat));
+  return header("03 · Competitor website intelligence","Competitor sites","Study structure and functionality, then adapt what works. Functional replication only — never copy text, images, branding or code.",
+    `<button class="btn ai" data-act="aiComp" ${aiReady()&&rows.length?"":"disabled"}>Recommend site improvements</button><button class="btn p" data-new="competitors">Add website</button>`) + loadingNote() +
+  (rows.length ? `<div class="card"><h3>Feature prevalence <small>across ${rows.length} sites studied</small></h3>${Object.entries(feat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="hbar"><span class="k">${esc(k)}</span><span class="tr"><i style="width:${v/mx*100}%"></i></span><span class="n">${v}</span></div>`).join("")}</div>` +
+  table([
+    {h:"Website",f:c=>`<div class="t">${esc(c.name)}${exTag(c)}</div><div class="sub">${c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.url)}</a>`:""}</div>`},
+    {h:"Vertical",f:c=>vpill(c.vertical)},
+    {h:"Features",f:c=>(c.features||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join("")},
+    {h:"Gaps for MWC",f:c=>`<span class="sub">${esc((c.gaps||"").slice(0,160))}</span>`},
+  ], rows, c=>`<button class="btn s" data-edit="competitors:${c.id}">Edit</button>`) : emptyState("No competitor sites yet","Record navigation, product grids, review formats, lead magnets and conversion elements.",`<button class="btn p" data-new="competitors">Add the first site</button>`)) + `<div id="aiOut"></div>`;
+};
+
+VIEWS.offers = () => {
+  const rows = all("offers"); const f = filters.offers||"";
+  const shown = rows.filter(o=>!f || o.status===f);
+  return header("04 · Affiliate offer discovery","Offer pipeline","Offers are chosen because customers need them, not because a network lists them. AI scores each against research, chatbot demand and programme terms.",
+    `<button class="btn ai" data-act="aiDiscover" ${aiReady()?"":"disabled"}>Discover offers from demand</button><button class="btn p" data-new="offers">Add offer</button>`) + loadingNote() +
+  `<div class="tools"><select data-filter="offers"><option value="">All statuses</option>${OFFER_STATUSES.map(s=>`<option ${s===f?"selected":""}>${s}</option>`).join("")}</select><span class="muted">${shown.length} offers</span></div>` +
+  (shown.length ? table([
+    {h:"Offer",f:o=>`<div class="t">${esc(o.name)}${exTag(o)}</div><div class="sub">${esc(o.category)} · ${esc(o.markets)}</div>`},
+    {h:"Network",f:o=>esc(o.network)},{h:"Vertical",f:o=>vpill(o.vertical)},
+    {h:"AI score",f:o=>o.score!=null?`<b style="font-family:var(--f-mono)">${esc(o.score)}</b><span class="muted">/100</span>`:"<span class='muted'>—</span>"},
+    {h:"Status",f:o=>pill(o.status)},
+  ], shown, o=>`<button class="btn s ai" data-eval="${o.id}" ${aiReady()?"":"disabled"}>Evaluate</button> <button class="btn s" data-offer="${o.id}">Open</button>`) :
+   emptyState("No offers in the pipeline","Add offers you find on Awin, Digistore24, ClickBank, Impact (Chewy) or direct programmes, or let AI suggest offer types from customer demand.",`<button class="btn p" data-new="offers">Add an offer</button>`)) + `<div id="aiOut"></div>`;
+};
+
+VIEWS.approvals = () => {
+  const offers = all("offers");
+  const lane = (s) => { const r = offers.filter(o=>o.status===s); return `<div class="card"><h3>${s} <small>${r.length}</small></h3>${r.length? r.map(o=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="t">${esc(o.name)}${exTag(o)}</div><div class="sub muted">${esc(o.network)} · ${esc(o.vertical)}${o.score!=null?` · score ${esc(o.score)}`:""}</div><div class="row" style="margin-top:6px">${(OFFER_NEXT[s]||[]).map(n=>`<button class="btn s ${n==="Active"?"p":""} ${n==="Rejected"?"danger":""}" data-move="${o.id}|${n}">${n==="Active"?"Activate…":"→ "+n}</button>`).join("")}</div></div>`).join("") : `<p class="muted">None</p>`}</div>`; };
+  const log = all("audit").filter(a=>a.ref && a.ref.startsWith("offer:")).slice(0,15);
+  return header("05 · Mandatory human approval","Approval gateway","AI may discover, evaluate and recommend. A person applies to the network, verifies approval and promotional permissions, then sends the activation signal.","") + loadingNote() +
+  `<div class="card"><div class="flow">${["AI discovers","AI recommends","We apply manually","Approval verified","Explicit activation signal","Content & promotion unlocked"].map((x,i)=>`<span class="${i===4?"on":""}">${i+1}. ${x}</span>`).join("")}</div></div>
+  <div class="grid g3">${lane("Shortlisted")}${lane("Approval pending")}${lane("Approved")}</div>
+  <div class="grid g3">${lane("Active")}${lane("Paused")}${lane("Rejected")}</div>
+  <div class="card"><h3>Approval audit trail</h3>${log.length? table([{h:"When",f:a=>`<span class="sub">${esc(day(a.createdAt))}</span>`},{h:"Action",f:a=>esc(a.action)},{h:"Detail",f:a=>esc(a.detail)},{h:"By",f:a=>esc(a.by)}], log) : `<p class="muted">Every status change is logged here with who made it.</p>`}</div>`;
+};
+
+VIEWS.content = () => {
+  const rows = all("content"); const f = filters.content||"";
+  const shown = rows.filter(c=>!f || c.status===f);
+  return header("06 · Website content intelligence","Content studio","The whole site, not just the blog: homepage, categories, need-based navigation, reviews, comparisons, guides, FAQs, lead magnets and creative briefs.",
+    `<button class="btn ai" data-act="aiPlan" ${aiReady()?"":"disabled"}>Plan content from gaps</button><button class="btn p" data-act="newContent">New content</button>`) + loadingNote() +
+  `<div class="note">Offer-specific content can be generated only for <b>Active</b> offers. Every product fact, price, rating and health claim must be verified by a person before publishing.</div>
+  <div class="tools"><select data-filter="content"><option value="">All statuses</option>${SCHEMA.content[4].o.map(s=>`<option ${s===f?"selected":""}>${s}</option>`).join("")}</select><span class="muted">${shown.length} items</span></div>` +
+  (shown.length ? table([
+    {h:"Title",f:c=>`<div class="t">${esc(c.title)}${exTag(c)}</div><div class="sub">${esc(c.keywords||"")}</div>`},
+    {h:"Type",f:c=>esc(c.type)},{h:"Vertical",f:c=>vpill(c.vertical)},
+    {h:"Offer",f:c=>{ if(!c.offerId) return "<span class='muted'>Informational</span>"; const o=byId("offers",c.offerId); return o?`${esc(o.name)}<div>${pill(o.status)}</div>`:"<span class='muted'>removed</span>"; }},
+    {h:"Checks",f:c=>{ const flags = claimFlags(c.body); return `${c.factsVerified?'<span class="pill good">facts verified</span>':'<span class="pill warn">unverified</span>'}${flags.length?` <span class="pill bad" title="${esc(flags.join(", "))}">${flags.length} claim flag${flags.length>1?"s":""}</span>`:""}`; }},
+    {h:"Status",f:c=>pill(c.status)},
+  ], shown, c=>`<button class="btn s" data-content="${c.id}">Open</button>`) : emptyState("No content yet","Plan the site structure first: homepage, need-based categories, then reviews and guides for active offers.",`<button class="btn p" data-act="newContent">Create content</button>`)) + `<div id="aiOut"></div>`;
+};
+
+const CLAIM_WORDS = ["cure","cures","treat","treats","prevent disease","prevents","guaranteed","miracle","fda approved","clinically proven","detox","100% safe","no side effects","lose \\d+ ?(lbs|pounds|kg)","reverse"];
+function claimFlags(t){ const s = String(t||"").toLowerCase(); return CLAIM_WORDS.filter(w => new RegExp("\\b"+w+"\\b").test(s)); }
+
+VIEWS.social = () => {
+  const rows = all("social");
+  const plat = {}; rows.forEach(p=>{ const k=p.platform||"Other"; plat[k]=plat[k]||{n:0,reach:0,clicks:0}; plat[k].n++; plat[k].reach+=Number(p.reach)||0; plat[k].clicks+=Number(p.clicks)||0; });
+  return header("07 · Social media & creatives","Social & creatives","Published pages become banners, a short video and posts for Facebook, Instagram, Pinterest, TikTok and YouTube. Posts are published through each platform's official API, and their performance feeds back into the loop.",
+    `${API_MODE?`<button class="btn" data-runjob="social.publish">Publish due posts</button>`:""}<button class="btn p" data-new="social">Plan a post</button>`) + loadingNote() +
+  (Object.keys(plat).length ? `<div class="grid g4">${Object.entries(plat).map(([k,v])=>`<div class="card stat"><div class="l" style="margin:0 0 6px">${esc(k)}</div><div class="v">${v.clicks}</div><div class="l">site clicks · ${v.n} posts · ${v.reach.toLocaleString()} reach</div></div>`).join("")}</div>` : "") +
+  (rows.length ? table([
+    {h:"Date",f:p=>`<span style="font-family:var(--f-mono)">${esc(p.date||"—")}</span>`},
+    {h:"Platform",f:p=>`${esc(p.platform)}<div class="sub">${esc(p.format)}</div>`},
+    {h:"Caption",f:p=>`<div class="sub" style="color:var(--ink)">${esc((p.caption||"").slice(0,140))}</div>${exTag(p)}${p.videoUrl?`<div class="sub"><a href="${esc(p.videoUrl)}" target="_blank" rel="noopener">video</a></div>`:""}${p.externalUrl?`<div class="sub"><a href="${esc(p.externalUrl)}" target="_blank" rel="noopener">live post</a></div>`:""}${p.error?`<div class="sub" style="color:var(--bad)">${esc(p.error)}</div>`:""}`},
+    {h:"Source page",f:p=>{const c=byId("content",p.contentId); return c?esc(c.title):"<span class='muted'>—</span>";}},
+    {h:"Reach",num:1,f:p=>esc(p.reach||"")},{h:"Clicks",num:1,f:p=>esc(p.clicks||"")},
+    {h:"Status",f:p=>pill(p.status)},
+  ], rows, p=>`<button class="btn s" data-edit="social:${p.id}">Edit</button>`) : emptyState("Nothing planned","Open a published page in Content Studio and use “Repurpose for social”, or plan a post directly.",`<button class="btn p" data-new="social">Plan a post</button>`));
+};
+
+/* chatbot state lives in memory while the view is open */
+const CHAT = { sessionId:null, turns:[], busy:false, ctl:null, lead:{name:"",email:"",consent:false} };
+function chatRules(){
+  const offers = all("offers").filter(isActiveOffer).map(o=>`- ${o.name} (${o.vertical}; ${o.category}; markets ${o.markets})`).join("\n") || "- (no active offers yet — do not recommend specific products)";
+  const pages = all("content").filter(c=>c.status==="Published").slice(0,25).map(c=>`- ${c.title} [${c.type}] ${c.wpUrl||""}`).join("\n") || "- (no published pages yet)";
+  return `${BRAND_RULES}
+You are the MWC website assistant. Two goals: (1) help visitors warmly and briefly, (2) learn about them for primary research: their needs, problems, interests, product preferences, buying considerations, country/market, expectations from MWC, unmet needs and suggestions. Ask at most one natural question per reply. Keep replies under 90 words.
+Only recommend these ACTIVE offers, and only when relevant:\n${offers}
+Point to these verified MWC pages where helpful:\n${pages}
+Never give medical diagnoses; suggest seeing a doctor or vet for health concerns. Never ask for email yourself — the site shows a consent form for that.`;
+}
+VIEWS.chatbot = () => {
+  const sessions = all("chats").slice(0,8);
+  return header("08 · Chatbot & primary research","Website chatbot","Test the visitor experience here. Each session is turned into structured insights and, with consent, a customer record.",
+    `<button class="btn" data-go="setup">Embed on WordPress</button>`) + loadingNote() +
+  `<div class="grid g2">
+    <div>
+      <div class="chat">
+        <div class="top"><span>MWC Wellness Guide</span><span class="status" style="color:inherit;opacity:.8">${aiReady()?"online":"AI offline"}</span></div>
+        <div class="msgs" id="msgs">${chatMsgsHtml()}${aiReady()?"":`<div class="note" style="align-self:stretch">The chatbot needs AI. Open the console at its Claude link, or connect an API key for local testing. <button class="btn s p" data-act="connectAi">Connect AI</button></div>`}</div>
+        <form id="chatForm"><input id="chatIn" placeholder="${aiReady()?"Type as a visitor, e.g. My 9-year-old lab is getting stiff…":"Connect AI to chat"}" autocomplete="off" ${aiReady()?"":"disabled"}><button class="btn p" ${aiReady()?"":"disabled"}>Send</button></form>
+      </div>
+    </div>
+    <div class="grid" style="align-content:start">
+      <div class="card"><h3>Visitor consent form <small>shown by the widget</small></h3>
+        <div class="form">
+          <label class="f">Name<input id="leadName" value="${esc(CHAT.lead.name)}"></label>
+          <label class="f">Email<input id="leadEmail" type="email" value="${esc(CHAT.lead.email)}"></label>
+          <label class="ck wide"><input type="checkbox" id="leadConsent" ${CHAT.lead.consent?"checked":""}> I agree to receive wellness tips and offers from My Wellness Community by email. I can unsubscribe at any time.</label>
+        </div>
+      </div>
+      <div class="card"><h3>Finish the session</h3>
+        <p class="muted" style="margin-top:0">AI extracts needs, interests, market and questions, saves them to the intelligence loop, and creates or updates the customer record if consent was given.</p>
+        <div class="row"><button class="btn p ai" data-act="endChat" ${aiReady()&&CHAT.turns.length?"":"disabled"}>Save session insights</button><button class="btn" data-act="resetChat">Clear chat</button></div>
+        <div id="chatSaveOut"></div>
+      </div>
+      <div class="card"><h3>Recent sessions</h3>${sessions.length? sessions.map(s=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><div class="sub muted">${esc(day(s.createdAt))} · ${esc(s.country||"market unknown")} · ${vpill(s.vertical)}</div>${esc(s.summary)}</div>`).join("") : `<p class="muted">No saved sessions yet.</p>`}</div>
+    </div>
+  </div>`;
+};
+function chatMsgsHtml(){ if (!CHAT.turns.length) return `<div class="msg a">Hi! I'm the MWC Wellness Guide. Are you looking for something for yourself or for a pet?</div>`; return CHAT.turns.map(t=>`<div class="msg ${t.role==="user"?"u":"a"}">${esc(t.content)}</div>`).join(""); }
+
+VIEWS.crm = () => {
+  const rows = all("contacts"); const q = (filters.crm||"").toLowerCase();
+  const shown = rows.filter(c => !q || JSON.stringify(c).toLowerCase().includes(q));
+  return header("09 · Our own CRM","Customer database","MWC owns this database. MailerLite only delivers email; profiles, consent, segments and history live here.",
+    `<button class="btn" data-act="exportCsv">Copy as CSV</button><button class="btn p" data-new="contacts">Add contact</button>`) + loadingNote() +
+  `<div class="tools"><input data-filter="crm" placeholder="Search name, email, interest, need…" value="${esc(filters.crm||"")}" style="min-width:240px;flex:1"><span class="muted">${shown.length} of ${rows.length}</span></div>` +
+  (shown.length ? table([
+    {h:"Contact",f:c=>`<div class="t">${esc(c.name||"(no name)")}${exTag(c)}</div><div class="sub">${esc(c.email||"")}</div>`},
+    {h:"Market",f:c=>esc(c.country)},{h:"Interest",f:c=>vpill(c.vertical)+`<div>${(c.interests||[]).map(i=>`<span class="tag">${esc(i)}</span>`).join("")}</div>`},
+    {h:"Source",f:c=>esc(c.source)},{h:"Stage",f:c=>pill(c.stage)},
+    {h:"Score",num:1,f:c=>esc(c.engagement??"")},
+    {h:"Consent",f:c=>c.suppressed?'<span class="pill bad">suppressed</span>':c.consentEmail?'<span class="pill good">yes</span>':'<span class="pill mute">no</span>'},
+  ], shown, c=>`<button class="btn s" data-contact="${c.id}">Profile</button>`) : emptyState("No customers yet","Contacts arrive from the chatbot, subscription and contact forms. You can also add them by hand.",`<button class="btn p" data-new="contacts">Add a contact</button>`));
+};
+
+VIEWS.segments = () => {
+  const contacts = all("contacts"); const seg = segmentSummary(); const sel = filters.segments || "";
+  const members = sel ? contacts.filter(c=>segmentsOf(c).includes(sel)) : [];
+  const stages = count(contacts, c=>c.stage||"New");
+  return header("10 · Segmentation & lead management","Segments & leads","Segments are recalculated automatically whenever a profile changes: interest area, market, needs, engagement, consent and follow-ups.","") + loadingNote() +
+  `<div class="card"><h3>Lifecycle</h3>${contacts.length?`<div class="flow">${["New","Engaged","Qualified","Clicked offer","Dormant","Unsubscribed"].map(s=>`<span class="${stages[s]?"on":""}">${s} · ${stages[s]||0}</span>`).join("")}</div>`:`<p class="muted">No contacts yet.</p>`}</div>
+  <div class="grid g2">
+    <div class="card"><h3>Automatic segments</h3>${Object.keys(seg).length? Object.entries(seg).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="hbar" style="cursor:pointer" data-seg="${esc(k)}"><span class="k" style="${k===sel?"font-weight:600;color:var(--accent)":""}">${esc(k)}</span><span class="tr"><i style="width:${v/Math.max(1,contacts.length)*100}%"></i></span><span class="n">${v}</span></div>`).join("") : `<p class="muted">Segments appear once contacts exist.</p>`}</div>
+    <div class="card"><h3>${sel?esc(sel):"Select a segment"} <small>${sel?members.length+" members":""}</small></h3>
+      ${sel? (members.map(c=>`<div style="padding:6px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;justify-content:space-between;align-items:center"><div style="min-width:0"><div class="t">${esc(c.name||c.email)}</div><div class="sub muted">${esc(c.stage||"New")}${c.followUp?` · follow-up ${esc(c.followUp)}`:""}</div></div><button class="btn s" data-contact="${c.id}">Profile</button></div>`).join("") + `<div class="row" style="margin-top:10px"><button class="btn" data-act="segCampaign">Create email for this segment</button></div>`) : `<p class="muted">Click a segment to see its members and act on them.</p>`}
+    </div>
+  </div>`;
+};
+
+VIEWS.email = () => {
+  const rows = all("campaigns"); const contacts = all("contacts");
+  const ok = contacts.filter(emailable).length, sup = contacts.filter(c=>c.suppressed||c.stage==="Unsubscribed").length;
+  return header("11 · Email marketing","Email campaigns","Strategy, content and segments are decided here; MailerLite (or an equivalent) is only the delivery engine. Results flow back into customer profiles.",
+    `<button class="btn" data-act="syncPreview">Preview subscriber sync</button><button class="btn p" data-new="campaigns">New campaign</button>`) + loadingNote() +
+  `<div class="grid g4">
+    <div class="card stat"><div class="v">${ok}</div><div class="l">Eligible to sync (consented)</div></div>
+    <div class="card stat"><div class="v">${sup}</div><div class="l">Suppressed / unsubscribed</div></div>
+    <div class="card stat"><div class="v">${rows.reduce((a,c)=>a+(Number(c.sent)||0),0)}</div><div class="l">Emails sent</div></div>
+    <div class="card stat"><div class="v">${(()=>{const s=rows.reduce((a,c)=>a+(Number(c.sent)||0),0),o=rows.reduce((a,c)=>a+(Number(c.opens)||0),0);return s?Math.round(o/s*100)+"%":"—";})()}</div><div class="l">Average open rate</div></div>
+  </div>` +
+  (rows.length ? table([
+    {h:"Campaign",f:c=>`<div class="t">${esc(c.name)}${exTag(c)}</div><div class="sub">${esc(c.subject||"")}</div>`},
+    {h:"Type",f:c=>esc(c.type)},{h:"Segment",f:c=>`<span class="tag">${esc(c.segment||"All emailable")}</span>`},
+    {h:"Sent",num:1,f:c=>esc(c.sent||"")},{h:"Open",num:1,f:c=>c.sent?Math.round((c.opens||0)/c.sent*100)+"%":""},{h:"Click",num:1,f:c=>c.sent?Math.round((c.clicks||0)/c.sent*100)+"%":""},
+    {h:"Status",f:c=>pill(c.status)},
+  ], rows, c=>`${API_MODE && ["Draft","Approved"].includes(c.status)?`<button class="btn s p" data-sendmail="${c.id}">Approve & send</button> `:""}<button class="btn s ai" data-draftmail="${c.id}" ${aiReady()?"":"disabled"}>Write</button> <button class="btn s" data-edit="campaigns:${c.id}">Edit</button>`) : emptyState("No campaigns yet","Start with a welcome sequence for each interest area: Nutra wellness and Pet wellness.",`<button class="btn p" data-new="campaigns">Create a campaign</button>`)) + `<div id="aiOut"></div>`;
+};
+
+VIEWS.analytics = () => {
+  const rows = all("metrics");
+  const byPage = {}; rows.forEach(m=>{ const k=m.page||"(unnamed)"; byPage[k]=byPage[k]||{s:0,c:0,v:0,src:m.source}; byPage[k].s+=Number(m.sessions)||0; byPage[k].c+=Number(m.clicks)||0; byPage[k].v+=Number(m.conversions)||0; });
+  const bySrc = {}; rows.forEach(m=>{ bySrc[m.source||"Other"]=(bySrc[m.source||"Other"]||0)+(Number(m.sessions)||0); });
+  const top = Object.entries(byPage).sort((a,b)=>b[1].s-a[1].s).slice(0,10); const mx = Math.max(1,...top.map(t=>t[1].s));
+  const smx = Math.max(1,...Object.values(bySrc));
+  const social = all("social"), camps = all("campaigns");
+  return header("12 · Analytics & performance","Performance intelligence","One view across GA4, Search Console, Meta Pixel, social, ads, email and chatbot. Sanjay's tracking setup feeds it; numbers can also be pasted from exports.",
+    `<button class="btn" data-act="pasteCsv">Paste CSV export</button><button class="btn p" data-new="metrics">Add data point</button>`) + loadingNote() +
+  `<div class="grid g4">
+    <div class="card stat"><div class="v">${rows.reduce((a,m)=>a+(Number(m.sessions)||0),0).toLocaleString()}</div><div class="l">Sessions / impressions logged</div></div>
+    <div class="card stat"><div class="v">${rows.reduce((a,m)=>a+(Number(m.clicks)||0),0).toLocaleString()}</div><div class="l">Clicks incl. affiliate</div></div>
+    <div class="card stat"><div class="v">${social.reduce((a,p)=>a+(Number(p.clicks)||0),0).toLocaleString()}</div><div class="l">Social → site clicks</div></div>
+    <div class="card stat"><div class="v">${camps.reduce((a,c)=>a+(Number(c.clicks)||0),0).toLocaleString()}</div><div class="l">Email clicks</div></div>
+  </div>` +
+  (rows.length ? `<div class="grid g2">
+    <div class="card"><h3>Top pages & campaigns <small>by sessions</small></h3>${top.map(([k,v])=>`<div class="hbar"><span class="k" title="${esc(k)}">${esc(k)}</span><span class="tr"><i style="width:${v.s/mx*100}%"></i></span><span class="n">${v.s.toLocaleString()}</span></div>`).join("")}</div>
+    <div class="card"><h3>Traffic by source</h3>${Object.entries(bySrc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="hbar"><span class="k">${esc(k)}</span><span class="tr"><i style="width:${v/smx*100}%"></i></span><span class="n">${v.toLocaleString()}</span></div>`).join("")}</div>
+  </div>` + table([
+    {h:"Date",f:m=>`<span style="font-family:var(--f-mono)">${esc(m.date)}</span>`},{h:"Source",f:m=>esc(m.source)},{h:"Page / campaign",f:m=>esc(m.page)+exTag(m)},
+    {h:"Sessions",num:1,f:m=>esc(m.sessions||"")},{h:"Engaged",num:1,f:m=>esc(m.engaged||"")},{h:"Clicks",num:1,f:m=>esc(m.clicks||"")},{h:"Conv.",num:1,f:m=>esc(m.conversions||"")},
+  ], rows.slice(0,40), m=>`<button class="btn s" data-edit="metrics:${m.id}">Edit</button>`) : emptyState("No performance data yet","Once GA4, Search Console and Meta Pixel are live, paste exports here or add data points by hand.",`<button class="btn p" data-act="pasteCsv">Paste a CSV export</button>`));
+};
+
+VIEWS.learning = () => {
+  const ins = all("insights"); const f = filters.learning||"Open";
+  const shown = ins.filter(i => f==="All" || (i.status||"Open")===f);
+  const sig = ruleSignals();
+  return header("13 · Continuous learning","Learning engine","Connects findings across every module and turns them into actions: new offers, new pages, restructured categories, new campaigns.",
+    `<button class="btn ai p" data-act="runLearning" ${aiReady()?"":"disabled"}>Run learning cycle</button>`) + loadingNote() +
+  `<div class="grid g2">
+    <div class="card"><h3>Live rule signals <small>${sig.length}</small></h3>${sig.length? sig.map(s=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="pill ${s.p===1?"bad":s.p===2?"warn":"mute"}">P${s.p}</span> <b style="font-weight:500">${esc(s.t)}</b><div class="sub muted">${esc(s.w)}</div></div>`).join("") : `<p class="muted">No signals.</p>`}</div>
+    <div class="card"><h3>How the loop learns</h3><dl class="kv">
+      <dt>Chatbot</dt><dd>needs & questions → insights → offer discovery and content gaps</dd>
+      <dt>Email</dt><dd>opens/clicks → engagement scores → segments → next campaigns</dd>
+      <dt>Analytics</dt><dd>page performance → content refresh and restructuring</dd>
+      <dt>Ads & competitors</dt><dd>winning patterns → landing pages and creatives</dd>
+      <dt>Offers</dt><dd>new approvals → reviews, comparisons, guides, social posts</dd></dl></div>
+  </div>
+  <div class="tools"><select data-filter="learning">${["Open","Actioned","Dismissed","All"].map(s=>`<option ${s===f?"selected":""}>${s}</option>`).join("")}</select><span class="muted">${shown.length} insights</span></div>` +
+  (shown.length ? table([
+    {h:"Insight / recommendation",f:i=>`<div class="t">${esc(i.text)}${exTag(i)}</div>${i.why?`<div class="sub">${esc(i.why)}</div>`:""}`},
+    {h:"Kind",f:i=>esc(i.kind)},{h:"From",f:i=>esc(i.source)},{h:"Act in",f:i=>i.module?`<button class="btn s" data-go="${esc(i.module)}">${esc((MODULES.find(m=>m.id===i.module)||{}).label||i.module)}</button>`:""},
+    {h:"Priority",f:i=>pill(i.priority||"—")},{h:"Status",f:i=>pill(i.status||"Open")},
+  ], shown, i=>`<button class="btn s" data-ins="${i.id}|Actioned">Done</button> <button class="btn s" data-ins="${i.id}|Dismissed">Dismiss</button>`) : emptyState("No insights in this view","Run a learning cycle or save chatbot sessions to generate insights.",""));
+};
+
+VIEWS.setup = () => {
+  const plats = all("platforms"), phases = all("phases").sort((a,b)=>String(a.n).localeCompare(String(b.n)));
+  return header("Setup","Integrations & delivery plan","Affiliate access register, tracking, integration code for Sanjay, and the phased build with acceptance criteria.",
+    `<button class="btn p" data-new="platforms">Add platform</button>`) + loadingNote() +
+  `<div class="note bad">Never store passwords, API keys or login details in this console. Record only where they are kept (an encrypted vault) and whether 2FA is on.</div>
+  <div class="card"><h3>Affiliate platform access register</h3>${plats.length? table([
+    {h:"Platform",f:p=>`<div class="t">${esc(p.name)}</div>`},{h:"Vertical",f:p=>vpill(p.vertical)},
+    {h:"Status",f:p=>`<span class="pill ${p.accountStatus==="Active"?"good":p.accountStatus==="Rejected"?"bad":"warn"}">${esc(p.accountStatus)}</span>`},
+    {h:"API / export",f:p=>esc(p.api)},{h:"2FA",f:p=>p.twoFA?'<span class="pill good">on</span>':'<span class="pill warn">check</span>'},
+    {h:"Notes",f:p=>`<span class="sub">${esc(p.notes||p.restrictions||"")}</span>`},
+  ], plats, p=>`<button class="btn s" data-edit="platforms:${p.id}">Edit</button>`) : `<p class="muted">No platforms recorded.</p>`}</div>
+  <div class="card"><h3>Build phases & acceptance</h3>${phases.length? table([
+    {h:"Phase",f:p=>`<div class="t">${esc(p.n)}. ${esc(p.title)}</div><div class="sub">${esc(p.scope)}</div>`},
+    {h:"Acceptance criteria",f:p=>`<span class="sub">${esc(p.acceptance)}</span>`},{h:"Owner",f:p=>esc(p.owner)},
+    {h:"Status",f:p=>`<select data-phase="${p.id}" style="width:auto">${["Not started","In progress","Done"].map(s=>`<option ${s===(p.status||"Not started")?"selected":""}>${s}</option>`).join("")}</select>`},
+  ], phases) : `<p class="muted">No phases recorded.</p>`}</div>
+  <div class="card"><h3>Responsibility matrix</h3>${table([{h:"Area",f:r=>esc(r[0])},{h:"Preeti — AI & backend",f:r=>r[1]},{h:"Sanjay — website & tracking",f:r=>r[2]},{h:"Business owner",f:r=>r[3]}],[
+    ["Research & offer intelligence","Builds","—","Reviews"],["Approval gateway","Builds","—","<b>Applies & activates</b>"],["Content generation","Builds","Publishes via WordPress","Approves claims"],
+    ["Chatbot","Builds AI & API","Embeds widget","—"],["CRM & segments","Builds","Connects forms","—"],["Email (MailerLite)","Sync & content","Forms & double opt-in","Approves campaigns"],
+    ["GA4, GTM, Meta Pixel, GSC","Reads data","<b>Installs & configures</b>","—"],["Social integrations","Planning & analysis","Site links & feeds","Account access"]])}</div>
+  <div class="grid g2">
+    <div class="card"><h3>Tracking events (GTM dataLayer)</h3><pre class="code">${esc(SNIP.gtm)}</pre></div>
+    <div class="card"><h3>Chatbot embed for WordPress</h3><pre class="code">${esc(SNIP.widget)}</pre></div>
+    <div class="card"><h3>MailerLite subscriber sync</h3><pre class="code">${esc(SNIP.mailerlite)}</pre></div>
+    <div class="card"><h3>WordPress publishing (REST API)</h3><pre class="code">${esc(SNIP.wp)}</pre></div>
+  </div>
+  <div class="card"><h3>Central data model</h3><pre class="code">${esc(SNIP.schema)}</pre></div>`;
+};
+
+const SNIP = {
+gtm:`// Add to the site via GTM (Sanjay). Fire on key MWC actions.
+window.dataLayer = window.dataLayer || [];
+function mwcTrack(event, params){ dataLayer.push({event, ...params}); }
+
+// Affiliate link click (add data-offer-id to every affiliate link)
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[data-offer-id]');
+  if (a) mwcTrack('affiliate_click', {
+    offer_id: a.dataset.offerId, network: a.dataset.network,
+    page_type: document.body.dataset.pageType });
+});
+// Others: chatbot_open, chatbot_lead (consent=true),
+// newsletter_signup, lead_magnet_download, comparison_view
+// GA4: mark affiliate_click + newsletter_signup as key events.
+// Meta Pixel: map newsletter_signup -> Lead.`,
+widget:`<!-- WordPress: Appearance > Theme File Editor > footer, or WPCode -->
+<div id="mwc-chat"></div>
+<script>
+  window.MWC_CHAT = {
+    endpoint: 'https://api.mywellnesscommunity.com/chat', // Preeti's backend
+    consentText: 'I agree to receive wellness tips and offers from ' +
+      'My Wellness Community by email. I can unsubscribe at any time.',
+    privacyUrl: '/privacy-policy/'
+  };
+<\/script>
+<script src="https://api.mywellnesscommunity.com/widget.js" defer><\/script>
+<!-- Backend contract (POST /chat): {sessionId, message, page}
+     -> {reply}. POST /chat/lead: {sessionId, name, email,
+     consent:true, consentText, page} -> creates CRM contact. -->`,
+mailerlite:`// Server-side only (API key in env / secrets manager).
+// Push ONLY consented, non-suppressed contacts.
+async function syncContact(c, groupIds) {
+  const res = await fetch('https://connect.mailerlite.com/api/subscribers', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json', Accept: 'application/json',
+      Authorization: 'Bearer ' + process.env.MAILERLITE_API_KEY },
+    body: JSON.stringify({
+      email: c.email,
+      fields: { name: c.name, country: c.country, vertical: c.vertical },
+      groups: groupIds  // one MailerLite group per MWC segment
+    })
+  });
+  if (!res.ok) throw new Error('MailerLite ' + res.status);
+}
+// Feedback: subscribe to MailerLite webhooks (subscriber.unsubscribed,
+// campaign.open, campaign.click) -> update contact engagement,
+// stage and suppression in the MWC database.`,
+wp:`// Create a DRAFT post — a person approves before it goes live.
+// Use a WordPress Application Password stored in a secrets manager.
+const auth = 'Basic ' + btoa(process.env.WP_USER + ':' + process.env.WP_APP_PASSWORD);
+await fetch('https://mywellnesscommunity.com/wp-json/wp/v2/posts', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Authorization: auth },
+  body: JSON.stringify({
+    title: item.title,
+    content: item.html,     // includes affiliate disclosure
+    status: 'draft',        // never 'publish' from automation
+    categories: [catId], tags: tagIds
+  })
+});
+// Pages: /wp-json/wp/v2/pages. Gate: only call when the linked
+// offer.status === 'Active' and item.factsVerified === true.`,
+schema:`research     {title, category, vertical, market, finding, source, confidence}
+ads          {brand, platform, format, duration, hook, pain, trigger, story, cta, landing, source}
+competitors  {name, url, vertical, features[], notes, gaps}
+offers       {name, network, vertical, category, markets, commission, metric, reputation,
+              traffic, materials, demandEvidence, status, score, evaluation, approvedBy, activatedAt}
+content      {title, type, vertical, offerId -> offers, status, keywords, body, wpUrl, factsVerified}
+social       {platform, format, contentId -> content, date, status, caption, link, reach, clicks}
+contacts     {name, email, country, vertical, interests[], needs, source, stage, engagement,
+              consentEmail, consentNote, consentAt, suppressed, followUp, history[]}
+campaigns    {name, type, segment, status, subject, body, sent, opens, clicks, unsubs}
+metrics      {date, source, page, sessions, engaged, clicks, conversions}
+chats        {summary, needs[], interests[], questions[], vertical, country, contactId}
+insights     {text, why, kind, source, module, priority, status}
+audit        {action, ref, detail, by}       platforms {name, accountStatus, api, twoFA, vault}
+Offer status: Discovered → Under evaluation → Shortlisted → Approval pending → Approved
+              → Active (human signal only) ⇄ Paused; Rejected; Expired / withdrawn`,
+};
+
+/* ---------- modals ---------- */
+function openModal(html, onBind){
+  modalOpen = true;
+  $("#modalRoot").innerHTML = `<div class="modal" id="modal"><div class="box">${html}</div></div>`;
+  $("#modal").addEventListener("click", e => { if (e.target.id==="modal" || e.target.closest("[data-close]")) closeModal(); });
+  onBind && onBind($("#modal"));
+  const first = $("#modal input, #modal select, #modal textarea"); first && first.focus();
+}
+function closeModal(){ modalOpen = false; $("#modalRoot").innerHTML = ""; if (dirty) render(); }
+document.addEventListener("keydown", e => { if (e.key==="Escape" && modalOpen) closeModal(); });
+
+function fieldHtml(f, v){
+  const id = "f_"+f.k; const w = f.wide?"wide":"";
+  if (f.t==="check") return `<label class="ck ${w}"><input type="checkbox" id="${id}" ${v?"checked":""}> ${esc(f.l)}</label>`;
+  let inner;
+  if (f.t==="textarea") inner = `<textarea id="${id}" ${f.big?'style="min-height:220px"':""} placeholder="${esc(f.ph||"")}">${esc(v)}</textarea>`;
+  else if (f.t==="select") inner = `<select id="${id}"><option value=""></option>${f.o.map(o=>`<option ${o===v?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+  else if (f.t==="multi") inner = `<div class="row" id="${id}">${f.o.map(o=>`<label class="ck" style="font-size:12.5px"><input type="checkbox" value="${esc(o)}" ${(v||[]).includes(o)?"checked":""}>${esc(o)}</label>`).join("")}</div>`;
+  else if (f.t==="offer") inner = `<select id="${id}"><option value="">— Informational (no offer) —</option>${all("offers").map(o=>`<option value="${o.id}" ${o.id===v?"selected":""} ${isActiveOffer(o)?"":"disabled"}>${esc(o.name)} (${esc(o.status)})</option>`).join("")}</select><span style="font-size:11.5px">Only Active offers can be selected.</span>`;
+  else if (f.t==="content") inner = `<select id="${id}"><option value=""></option>${all("content").map(c=>`<option value="${c.id}" ${c.id===v?"selected":""}>${esc(c.title)}</option>`).join("")}</select>`;
+  else if (f.t==="segment") inner = `<select id="${id}"><option value="">All emailable</option>${Object.keys(segmentSummary()).map(s=>`<option ${s===v?"selected":""}>${esc(s)}</option>`).join("")}</select>`;
+  else if (f.t==="tags") inner = `<input id="${id}" value="${esc((v||[]).join(", "))}">`;
+  else inner = `<input id="${id}" type="${f.t==="number"?"number":f.t==="date"?"date":f.t==="url"?"url":"text"}" value="${esc(v)}" placeholder="${esc(f.ph||"")}">`;
+  return `<label class="f ${w}">${esc(f.l)}${inner}</label>`;
+}
+function readForm(schema, root){
+  const o = {};
+  schema.forEach(f => { const el = root.querySelector("#f_"+f.k); if (!el) return;
+    if (f.t==="check") o[f.k] = el.checked;
+    else if (f.t==="multi") o[f.k] = [...el.querySelectorAll("input:checked")].map(i=>i.value);
+    else if (f.t==="tags") o[f.k] = el.value.split(",").map(s=>s.trim()).filter(Boolean);
+    else if (f.t==="number") o[f.k] = el.value===""?null:Number(el.value);
+    else o[f.k] = el.value.trim();
+  });
+  return o;
+}
+const TITLES = {communities:"community",research:"research finding",ads:"ad",competitors:"competitor site",offers:"offer",content:"content",social:"social post",contacts:"contact",campaigns:"campaign",metrics:"data point",platforms:"platform"};
+function editRecord(c, id, preset={}){
+  const obj = id ? {...byId(c,id)} : {...preset};
+  const schema = SCHEMA[c];
+  openModal(`<h2>${id?"Edit":"New"} ${TITLES[c]}</h2><div class="form">${schema.map(f=>fieldHtml(f,obj[f.k])).join("")}</div>
+    <div id="formErr"></div>
+    <div class="row" style="justify-content:space-between"><div>${id?`<button class="btn danger" data-del>Delete</button>`:""}</div><div class="row"><button class="btn" data-close>Cancel</button><button class="btn p" data-save>Save</button></div></div>`, m => {
+    m.querySelector("[data-save]").onclick = async () => {
+      const data = readForm(schema, m);
+      const missing = schema.filter(f=>f.req && !data[f.k]);
+      if (missing.length) { $("#formErr").innerHTML = `<div class="note bad">Fill in ${missing.map(f=>f.l).join(", ")}.</div>`; return; }
+      if (c==="content" && data.status==="Published" && !data.factsVerified) { $("#formErr").innerHTML = `<div class="note bad">Tick “facts verified” before marking content as Published.</div>`; return; }
+      if (c==="content" && data.offerId && !isActiveOffer(byId("offers",data.offerId))) { $("#formErr").innerHTML = `<div class="note bad">The linked offer is not Active. Activate it in the Approval Gateway first.</div>`; return; }
+      if (c==="contacts") { if (data.consentEmail && !obj.consentEmail) data.consentAt = now(); if (data.stage==="Unsubscribed") data.suppressed = true; }
+      if (c==="offers" && !id) data.status = "Discovered";
+      const rec = await save(c, {...obj, ...data, example: obj.example && !id ? obj.example : obj.example});
+      if (c==="offers" && !id) await audit("Offer discovered", "offer:"+rec.id, rec.name);
+      closeModal(); toast("Saved");
+    };
+    const d = m.querySelector("[data-del]");
+    if (d) d.onclick = () => { d.outerHTML = `<span class="row"><span class="muted">Delete permanently?</span><button class="btn danger" data-del2>Yes, delete</button></span>`; m.querySelector("[data-del2]").onclick = async () => { await del(c,id); closeModal(); toast("Deleted"); }; };
+  });
+}
+
+/* offer detail + status transitions */
+function openOffer(id){
+  const o = byId("offers", id); if (!o) return;
+  const ev = o.evaluation;
+  openModal(`<div><div class="eyebrow">${esc(o.network)} · ${esc(o.vertical)}</div><h2>${esc(o.name)}</h2></div>
+    <div class="row">${pill(o.status)}${o.score!=null?`<span class="pill acc">AI score ${esc(o.score)}/100</span>`:""}${exTag(o)}</div>
+    <dl class="kv"><dt>Category</dt><dd>${esc(o.category)}</dd><dt>Markets</dt><dd>${esc(o.markets)}</dd><dt>Commission</dt><dd>${esc(o.commission)}</dd><dt>EPC / gravity</dt><dd>${esc(o.metric)}</dd><dt>Reputation</dt><dd>${esc(o.reputation)}</dd><dt>Traffic allowed</dt><dd>${esc(o.traffic)}</dd><dt>Materials</dt><dd>${esc(o.materials)}</dd><dt>Demand evidence</dt><dd>${esc(o.demandEvidence)}</dd>${o.approvedBy?`<dt>Activated by</dt><dd>${esc(o.approvedBy)} on ${esc(day(o.activatedAt))}</dd>`:""}</dl>
+    ${ev?`<div class="card" style="background:var(--soft)"><h3>AI evaluation</h3><dl class="kv">${Object.entries(ev).map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(Array.isArray(v)?v.join("; "):v)}</dd>`).join("")}</dl></div>`:""}
+    <div><div class="eyebrow" style="margin-bottom:6px">Move to</div><div class="row">${(OFFER_NEXT[o.status]||[]).map(n=>`<button class="btn s ${n==="Active"?"p":""} ${n==="Rejected"?"danger":""}" data-move="${o.id}|${n}">${n==="Active"?"Activate…":n}</button>`).join("")}</div></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-editoffer>Edit details</button><button class="btn" data-close>Close</button></div>`, m => {
+      m.querySelector("[data-editoffer]").onclick = () => { closeModal(); editRecord("offers", id); };
+      m.querySelectorAll("[data-move]").forEach(b => b.onclick = () => { const [oid,n]=b.dataset.move.split("|"); closeModal(); moveOffer(oid,n); });
+  });
+}
+async function moveOffer(id, next){
+  const o = byId("offers", id); if (!o) return;
+  if (next === "Active") return activationDialog(o);
+  if (API_MODE) { try { const r = await apiFetch("POST",`/api/offers/${id}/transition`,{to:next}); S.offers.set(r.id,r); await reloadColl("content"); await reloadColl("audit"); scheduleRender(); toast(`${o.name}: ${next}`); } catch(e){ toast(e.message); } return; }
+  const body = {...o, status: next};
+  if (next==="Paused"||next==="Rejected"||next==="Expired / withdrawn") body.deactivatedAt = now();
+  await save("offers", body);
+  await audit(`Status → ${next}`, "offer:"+id, `${o.name} (was ${o.status})`);
+  // demote content that promotes a no-longer-active offer
+  if (["Paused","Rejected","Expired / withdrawn"].includes(next)) {
+    for (const c of all("content").filter(c=>c.offerId===id && ["Approved","Published"].includes(c.status))) await save("content", {...c, status:"Needs update", hold:`Offer ${next.toLowerCase()} on ${day(now())}`});
+  }
+  toast(`${o.name}: ${next}`);
+}
+function activationDialog(o){
+  openModal(`<h2>Activate “${esc(o.name)}”</h2>
+    <p class="muted" style="margin:0">This is the explicit activation signal. After it, AI may generate offer-specific content and promotion for this offer.</p>
+    <div class="form">
+      <label class="ck wide"><input type="checkbox" id="a1"> We applied to ${esc(o.network)} and the programme approved MWC.</label>
+      <label class="ck wide"><input type="checkbox" id="a2"> We checked permitted traffic sources and promotional methods.</label>
+      <label class="ck wide"><input type="checkbox" id="a3"> The affiliate link / tracking ID is in place.</label>
+      <label class="f">Your name<input id="aBy" value="${esc(whoName==="Team member"?"":whoName)}"></label>
+      <label class="f">Approval reference / date<input id="aRef" placeholder="e.g. Awin approval email 2 Nov"></label>
+      <label class="f wide">Affiliate link<input id="aLink" type="url" value="${esc(o.affLink||"")}"></label>
+    </div><div id="aErr"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-close>Cancel</button><button class="btn p" id="aGo">Activate offer</button></div>`, m => {
+    $("#aGo").onclick = async () => {
+      const by = $("#aBy").value.trim();
+      if (!$("#a1").checked || !$("#a2").checked || !$("#a3").checked || !by) { $("#aErr").innerHTML = `<div class="note bad">Confirm all three checks and enter your name.</div>`; return; }
+      whoName = by;
+      if (API_MODE) { try { const r = await apiFetch("POST",`/api/offers/${o.id}/transition`,{to:"Active", confirmations:{approvedByNetwork:true,trafficRulesChecked:true,trackingLinkInPlace:true}, approvalRef:$("#aRef").value.trim(), affiliateLink:$("#aLink").value.trim()}); S.offers.set(r.id,r); await reloadColl("audit"); closeModal(); toast("Offer activated"); } catch(e){ $("#aErr").innerHTML = `<div class="note bad">${esc(e.message)}</div>`; } return; }
+      await save("offers", {...o, status:"Active", approvedBy:by, approvalRef:$("#aRef").value.trim(), affLink:$("#aLink").value.trim(), activatedAt:now()});
+      await audit("Activated (human signal)", "offer:"+o.id, `${o.name} · ref: ${$("#aRef").value.trim()||"—"}`);
+      closeModal(); toast("Offer activated");
+    };
+  });
+}
+
+/* content detail with AI generation */
+function openContent(id){
+  const c = byId("content", id); if (!c) return;
+  const offer = c.offerId ? byId("offers", c.offerId) : null;
+  const blocked = offer && !isActiveOffer(offer);
+  const flags = claimFlags(c.body);
+  openModal(`<div><div class="eyebrow">${esc(c.type)} · ${esc(c.vertical||"")}</div><h2>${esc(c.title)}</h2></div>
+    <div class="row">${pill(c.status)}${offer?`<span class="pill ${blocked?"bad":"good"}">Offer: ${esc(offer.name)} — ${esc(offer.status)}</span>`:'<span class="pill mute">Informational</span>'}${c.factsVerified?'<span class="pill good">facts verified</span>':'<span class="pill warn">facts not verified</span>'}</div>
+    ${blocked?`<div class="note bad">The linked offer is not Active, so AI generation and publishing are blocked.</div>`:""}
+    ${c.hold?`<div class="note">${esc(c.hold)}</div>`:""}
+    ${flags.length?`<div class="note bad">Possible non-compliant health claims: ${flags.map(f=>`<span class="tag">${esc(f)}</span>`).join("")}</div>`:""}
+    <div class="aiout" id="cBody">${esc(c.body||"No body yet.")}</div>
+    ${API_MODE ? (()=>{ const cr = all("creatives").find(x=>x.contentId===c.id); return cr?.video?.url ? `<div class="note ok">Short video ready (${esc(cr.video.seconds)}s${cr.video.voiceOver?", voice-over":""}): <a href="${esc(cr.video.url)}" target="_blank" rel="noopener">open MP4</a></div>` : ""; })() : ""}
+    ${API_MODE && c.status!=="Published" ? `<div class="row"><button class="btn p" id="cApprove" ${blocked?"disabled":""}>Approve & publish…</button>${c.wpEditUrl?`<a class="btn" href="${esc(c.wpEditUrl)}" target="_blank" rel="noopener">Open WordPress draft</a>`:""}</div>`:""}
+    ${c.compliance?.aiReview?`<details><summary>AI compliance review</summary><div class="aiout">${esc(c.compliance.aiReview)}</div></details>`:""}
+    <div class="row">
+      <button class="btn ai p" id="cGen" ${aiReady()&&!blocked?"":"disabled"}>${c.body?"Regenerate draft":"Generate draft"}</button>
+      <button class="btn ai" id="cReview" ${aiReady()&&c.body?"":"disabled"}>Compliance review</button>
+      ${API_MODE?`<button class="btn ai" id="cVideo" ${c.body&&!blocked?"":"disabled"}>Render short video</button>`:""}
+      <button class="btn ai" id="cSocial" ${aiReady()&&c.body&&!blocked?"":"disabled"}>Repurpose for social</button>
+      <button class="btn" id="cStop" hidden>Stop</button>
+    </div>
+    <div id="cOut"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" id="cEdit">Edit / change status</button><button class="btn" data-close>Close</button></div>`, m => {
+    let ctl;
+    $("#cStop").onclick = () => ctl?.abort();
+    $("#cEdit").onclick = () => { closeModal(); editRecord("content", id); };
+    const ap = $("#cApprove"); if (ap) ap.onclick = () => { $("#cOut").innerHTML = `<div class="card"><label class="ck"><input type="checkbox" id="apF"> I verified every product fact, price, rating and health claim in this content.</label>${claimFlags(c.body).length?`<label class="f" style="margin-top:8px">Compliance flags present — reason for publishing anyway<input id="apO"></label>`:""}<div class="row" style="margin-top:10px"><button class="btn p" id="apGo">Publish</button></div><div id="apE"></div></div>`; $("#apGo").onclick = async () => { try { const r = await apiFetch("POST",`/api/content/${id}/approve`,{factsVerified:$("#apF").checked, complianceOverrideNote:$("#apO")?.value||""}); S.content.set(r.id,r); closeModal(); toast(r.status==="Published"?"Published to WordPress":"Approved"); reloadAll(); } catch(e){ $("#apE").innerHTML = `<div class="note bad">${esc(e.message)}</div>`; } }; };
+    if (API_MODE) {
+      $("#cGen").onclick = async () => { $("#cGen").disabled = true; $("#cBody").textContent = "Generating on the server (draft + compliance review)…"; try { const r = await apiFetch("POST",`/api/content/${id}/generate`); S.content.set(r.id,r); try { await apiFetch("POST",`/api/content/${id}/push-draft`); } catch(_){} closeModal(); openContent(id); } catch(e){ $("#cOut").innerHTML = `<div class="note bad">${esc(e.message)}</div>`; $("#cGen").disabled=false; } };
+      const cv = $("#cVideo"); if (cv) cv.onclick = async () => { cv.disabled = true; cv.textContent = "Rendering…"; try { await apiFetch("POST",`/api/content/${id}/creatives`).catch(()=>null); const r = await apiFetch("POST",`/api/content/${id}/video`); await reloadColl("creatives"); $("#cOut").innerHTML = `<div class="note ok">Video rendered: <a href="${esc(r.video.url)}" target="_blank" rel="noopener">open MP4</a></div>`; } catch(e){ $("#cOut").innerHTML = `<div class="note bad">${esc(e.message)}</div>`; } cv.disabled=false; cv.textContent="Render short video"; };
+      $("#cSocial").onclick = async () => { try { const r = await apiFetch("POST",`/api/content/${id}/repurpose`); await reloadColl("social"); $("#cOut").innerHTML = `<div class="note ok">${r.created} posts created in Social & Creatives.</div>`; } catch(e){ $("#cOut").innerHTML = `<div class="note bad">${esc(e.message)}</div>`; } };
+    }
+    if (!API_MODE) $("#cGen").onclick = async () => {
+      ctl = new AbortController(); $("#cStop").hidden = false; $("#cGen").disabled = true; $("#cBody").textContent = "Thinking…";
+      const research = all("research").filter(r=>!c.vertical||r.vertical===c.vertical||r.vertical==="Both").slice(0,8).map(r=>`- ${r.title}: ${r.finding}`).join("\n");
+      const needs = all("insights").slice(0,10).map(i=>`- ${i.text}`).join("\n");
+      const prompt = `${BRAND_RULES}\n\nWrite a ${c.type} for the MWC website.\nTitle: ${c.title}\nVertical: ${c.vertical}\nTarget keywords: ${c.keywords||"(choose sensible ones)"}\n${offer?`Promoted ACTIVE offer: ${offer.name} (${offer.network}; category ${offer.category}; markets ${offer.markets}). Known facts: ${offer.reputation||"none recorded"}. Use only these facts; mark anything else [VERIFY]. Start with an affiliate disclosure line.`:"This is informational content — do not promote specific products."}\nRelevant market research:\n${research||"- none yet"}\nCustomer questions & needs:\n${needs||"- none yet"}\n\nFormat: plain text with clear headings (## ), short paragraphs, a FAQ section where it fits, internal-link suggestions in [LINK: page] form, and a meta description at the end. If it is a graphic/infographic/video brief, write the brief (concept, layout, copy, specs per platform) rather than prose.`;
+      try { const r = await ai(prompt, {signal:ctl.signal, cache:false, onText:({text})=>{ $("#cBody").textContent = text; }});
+        await save("content", {...byId("content",id), body:r.text, status: c.status==="Idea"?"Draft":c.status, factsVerified:false});
+        $("#cOut").innerHTML = `<div class="note ok">Draft saved. A person must verify facts before it can be published.</div>`;
+      } catch(e){ if (e.code!=="cancelled") $("#cOut").innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; if (e.text) $("#cBody").textContent = e.text; }
+      $("#cStop").hidden = true; $("#cGen").disabled = false;
+    };
+    $("#cReview").onclick = async () => {
+      $("#cOut").innerHTML = `<div class="aiout">Reviewing…</div>`;
+      try { const r = await ai(`${BRAND_RULES}\n\nReview this MWC ${c.type} for compliance before publishing. List: (1) health/medical claims that are not allowed or need evidence, (2) facts, prices or ratings that must be verified, (3) missing affiliate disclosure, (4) fabricated testimonials or reviews, (5) suggested safe rewrites. Be concise.\n\n---\n${(c.body||"").slice(0,20000)}`, {modelTier:"default"});
+        $("#cOut").innerHTML = `<div class="aiout">${esc(r.text)}</div>`;
+      } catch(e){ $("#cOut").innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; }
+    };
+    if (!API_MODE) $("#cSocial").onclick = async () => {
+      $("#cOut").innerHTML = `<div class="aiout">Writing posts…</div>`;
+      try { const posts = await aiJson(`${BRAND_RULES}\n\nRepurpose this MWC website ${c.type} into social posts. Reply with only a JSON array of 4 objects {"platform": one of "Facebook","Instagram","Pinterest","TikTok","YouTube", "format": one of "Post","Reel/Short","Pin","Carousel","Video", "caption": string (platform-appropriate, include a call to read the full article, hashtags where suitable; for video formats write a 15-30s script with a hook in the first 2 seconds)}.\n\nTitle: ${c.title}\n${(c.body||"").slice(0,8000)}`);
+        if (!Array.isArray(posts)) throw {code:"invalid_json"};
+        for (const p of posts) await save("social", {platform:String(p.platform||""), format:String(p.format||"Post"), caption:String(p.caption||""), contentId:id, status:"Planned", link:c.wpUrl||""});
+        $("#cOut").innerHTML = `<div class="note ok">${posts.length} posts added to Social & Creatives as Planned.</div>`;
+      } catch(e){ $("#cOut").innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; }
+    };
+  });
+}
+
+/* contact profile */
+function openContact(id){
+  const c = byId("contacts", id); if (!c) return;
+  const segs = segmentsOf(c);
+  const hist = (c.history||[]).slice(-12).reverse();
+  openModal(`<div><div class="eyebrow">${esc(c.source||"Contact")} · ${esc(c.country||"")}</div><h2>${esc(c.name||c.email||"Contact")}</h2></div>
+    <div class="row">${pill(c.stage||"New")}${vpill(c.vertical)}${c.suppressed?'<span class="pill bad">suppressed</span>':c.consentEmail?'<span class="pill good">email consent</span>':'<span class="pill mute">no consent</span>'}${exTag(c)}</div>
+    <dl class="kv"><dt>Email</dt><dd>${esc(c.email)}</dd><dt>Interests</dt><dd>${(c.interests||[]).map(i=>`<span class="tag">${esc(i)}</span>`).join("")}</dd><dt>Needs</dt><dd>${esc(c.needs)}</dd><dt>Engagement</dt><dd>${esc(c.engagement??"—")}</dd><dt>Consent record</dt><dd>${esc(c.consentNote||"—")}${c.consentAt?` (${esc(day(c.consentAt))})`:""}</dd><dt>Follow-up</dt><dd>${esc(c.followUp||"—")}</dd><dt>Segments</dt><dd>${segs.map(s=>`<span class="tag">${esc(s)}</span>`).join("")}</dd></dl>
+    ${c.profile?`<div class="card" style="background:var(--soft)"><h3>AI profile</h3><div style="white-space:pre-wrap">${esc(c.profile)}</div></div>`:""}
+    <div class="card"><h3>Interaction history</h3>${hist.length?hist.map(h=>`<div class="sub" style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="muted">${esc(day(h.at))}</span> · ${esc(h.kind)} — ${esc(h.text)}</div>`).join(""):`<p class="muted">No interactions logged.</p>`}
+      <div class="row" style="margin-top:8px"><input id="hText" placeholder="Log an interaction (call, reply, enquiry…)" style="flex:1"><button class="btn" id="hAdd">Log</button></div></div>
+    <div id="pOut"></div>
+    <div class="row" style="justify-content:space-between"><div class="row"><button class="btn ai" id="pAi" ${aiReady()?"":"disabled"}>Build AI profile</button>${c.suppressed?"":`<button class="btn danger" id="pSup">Unsubscribe & suppress</button>`}</div><div class="row"><button class="btn" id="pEdit">Edit</button><button class="btn" data-close>Close</button></div></div>`, m => {
+    $("#pEdit").onclick = () => { closeModal(); editRecord("contacts", id); };
+    if (API_MODE) {
+      $("#hAdd").onclick = async () => { const t = $("#hText").value.trim(); if (!t) return; try { const r = await apiFetch("POST",`/api/contacts/${id}/interaction`,{kind:"Note", text:t}); S.contacts.set(r.id,r); closeModal(); openContent && openContact(id); } catch(e){ toast(e.message); } };
+      const sp = $("#pSup"); if (sp) sp.onclick = async () => { try { const r = await apiFetch("POST",`/api/contacts/${id}/withdraw`,{reason:"manual unsubscribe"}); S.contacts.set(r.id,r); closeModal(); toast("Contact suppressed"); } catch(e){ toast(e.message); } };
+      $("#pAi").onclick = async () => { $("#pOut").innerHTML = `<div class="aiout">Thinking…</div>`; try { const r = await apiFetch("POST",`/api/contacts/${id}/profile`); S.contacts.set(r.id,r); closeModal(); openContact(id); } catch(e){ $("#pOut").innerHTML = `<div class="note bad">${esc(e.message)}</div>`; } };
+      return;
+    }
+    $("#hAdd").onclick = async () => { const t = $("#hText").value.trim(); if (!t) return; const cur = byId("contacts",id); await save("contacts", {...cur, history:[...(cur.history||[]), {at:now(), kind:"Note", text:t}].slice(-50)}); closeModal(); openContact(id); };
+    const sup = $("#pSup"); if (sup) sup.onclick = async () => { const cur = byId("contacts",id); await save("contacts", {...cur, suppressed:true, consentEmail:false, stage:"Unsubscribed", history:[...(cur.history||[]), {at:now(), kind:"Consent", text:"Unsubscribed and added to suppression list"}]}); await audit("Suppressed contact","contact:"+id,cur.email); closeModal(); toast("Contact suppressed"); };
+    $("#pAi").onclick = async () => {
+      $("#pOut").innerHTML = `<div class="aiout">Thinking…</div>`;
+      const cur = byId("contacts",id);
+      try { const r = await ai(`${BRAND_RULES}\n\nBuild a short customer profile for MWC's CRM (no medical inferences beyond what they said). Sections: Who they are, What they need, Content to send, Offer categories that fit (only from ACTIVE offers listed), Next best action.\nActive offers: ${all("offers").filter(isActiveOffer).map(o=>o.name+" ("+o.category+")").join("; ")||"none"}\nContact: ${JSON.stringify({country:cur.country, vertical:cur.vertical, interests:cur.interests, needs:cur.needs, stage:cur.stage, engagement:cur.engagement, history:(cur.history||[]).slice(-10)})}`, {modelTier:"quick"});
+        await save("contacts", {...byId("contacts",id), profile:r.text}); closeModal(); openContact(id);
+      } catch(e){ $("#pOut").innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; }
+    };
+  });
+}
+
+/* ---------- actions ---------- */
+const filters = {};
+async function aiPanel(prompt, opts={}){
+  const out = $("#aiOut"); if (!out) return;
+  const ctl = new AbortController();
+  out.innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">AI analysis</h3><button class="btn s" id="aiStop">Stop</button></div><div class="aiout" id="aiText" style="margin-top:10px">Thinking…</div><div class="row" style="margin-top:10px" id="aiAfter"></div></div>`;
+  $("#aiStop").onclick = () => ctl.abort();
+  try { const r = await ai(prompt, {signal:ctl.signal, cache:false, onText:({text})=>{ const el=$("#aiText"); if(el) el.textContent=text; }, ...opts});
+    $("#aiStop")?.remove();
+    const after = $("#aiAfter"); if (after) { after.innerHTML = `<button class="btn s" id="aiKeep">Save as insight</button>`; $("#aiKeep").onclick = async () => { await save("insights", {text: r.text.slice(0,2000), kind:"Analysis", source: (MODULES.find(m=>m.id===view)||{}).label, module:view, status:"Open", priority:"Medium"}); toast("Saved to Learning Engine"); }; }
+    return r.text;
+  } catch(e){ const el=$("#aiText"); if (el) el.textContent = (e.text||"") + (e.code==="cancelled"?"":"\n\n" + aiErr(e)); $("#aiStop")?.remove(); }
+}
+const ACTIONS = {
+  aiResearch: () => aiPanel(`${BRAND_RULES}\n\nSynthesise MWC's secondary market research below into: 1) the 5 strongest opportunities (with vertical and market), 2) customer needs and buying motivations, 3) search intent clusters and content topics, 4) gaps in our research that need more evidence, 5) what to research next. Cite the finding titles you rely on.\n\n${JSON.stringify(all("research").slice(0,60).map(r=>({title:r.title,category:r.category,vertical:r.vertical,market:r.market,finding:r.finding,confidence:r.confidence,source:r.source})))}`),
+  aiAds: () => aiPanel(`${BRAND_RULES}\n\nAnalyse these ads MWC has catalogued. Output: 1) winning hook patterns, 2) best-performing formats and durations by platform, 3) pain points and emotional triggers that recur, 4) landing-page/conversion journeys, 5) THREE original MWC creative briefs (platform, format, duration, hook, script/visual outline, CTA, landing page) that use the patterns without copying any brand's assets or wording. Reference the advertiser names you draw from.\n\n${JSON.stringify(all("ads").slice(0,60))}`),
+  aiComp: () => aiPanel(`${BRAND_RULES}\n\nFrom these competitor website observations, recommend how MWC's website should evolve: navigation (need-based and technical), homepage layout, category structure, product grids, review & comparison formats, lead magnets, conversion elements and engagement mechanisms. Give a prioritised list with effort (S/M/L). Functional adaptation only — no copying of text, images, branding or code.\n\nCurrent MWC content: ${JSON.stringify(all("content").map(c=>({title:c.title,type:c.type,status:c.status})).slice(0,40))}\nCompetitors: ${JSON.stringify(all("competitors").slice(0,30))}`),
+  aiPlan: async () => {
+    const out = $("#aiOut"); out.innerHTML = `<div class="card"><div class="aiout">Thinking…</div></div>`;
+    try { const ideas = await aiJson(`${BRAND_RULES}\n\nUsing MWC's data below, propose the 8 most valuable website content items to create or update next (structure pages, category pages, reviews/comparisons ONLY for active offers, guides, blogs, FAQs, lead magnets). Reply with only a JSON array of {"title":string,"type": one of ${JSON.stringify(SCHEMA.content[1].o)},"vertical":"Nutra"|"Pet"|"Both","keywords":string,"why":string,"offerName":string or null}.\n\n${systemSnapshot()}`);
+      if (!Array.isArray(ideas)) throw {code:"invalid_json"};
+      out.innerHTML = `<div class="card"><h3>Suggested content</h3>${ideas.map((x,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start"><div style="flex:1;min-width:0"><div class="t">${esc(x.title)}</div><div class="sub muted">${esc(x.type)} · ${esc(x.vertical)} · ${esc(x.keywords)}</div><div class="sub">${esc(x.why)}</div></div><button class="btn s" data-addidea="${i}">Add as idea</button></div>`).join("")}</div>`;
+      out.querySelectorAll("[data-addidea]").forEach(b => b.onclick = async () => { const x = ideas[b.dataset.addidea]; const off = x.offerName ? all("offers").find(o=>isActiveOffer(o) && o.name===x.offerName) : null; await save("content", {title:String(x.title), type:String(x.type), vertical:String(x.vertical), keywords:String(x.keywords||""), body:"Brief: "+String(x.why||""), status:"Idea", offerId: off?off.id:""}); b.disabled = true; b.textContent = "Added"; });
+    } catch(e){ out.innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; }
+  },
+  aiDiscover: async () => {
+    const out = $("#aiOut"); out.innerHTML = `<div class="card"><div class="aiout">Thinking…</div></div>`;
+    try { const ideas = await aiJson(`${BRAND_RULES}\n\nYou are MWC's offer-discovery analyst. Based on the customer demand and research below, propose 6 offer TYPES MWC should look for on Awin, Digistore24, ClickBank, Impact (Chewy), Zooplus or direct programmes. Do NOT invent specific brand names, commissions or ratings — describe the product type and what to check. Note: Petco via Impact rejected MWC's application and must stay inactive. Reply with only a JSON array of {"name": product type, "vertical":"Nutra"|"Pet", "category":string, "networks":string (where to search), "markets":"USA"|"UK"|"EU"|"USA+UK"|"All", "demandEvidence":string (cite the research/customer data), "checks":string (what to verify before applying)}.\n\n${systemSnapshot()}`);
+      if (!Array.isArray(ideas)) throw {code:"invalid_json"};
+      out.innerHTML = `<div class="card"><h3>Offer types to look for <small>verify on the networks before adding real offers</small></h3>${ideas.map((x,i)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start"><div style="flex:1;min-width:0"><div class="t">${esc(x.name)} ${vpill(x.vertical)}</div><div class="sub muted">${esc(x.category)} · search: ${esc(x.networks)} · ${esc(x.markets)}</div><div class="sub">Demand: ${esc(x.demandEvidence)}</div><div class="sub">Check: ${esc(x.checks)}</div></div><button class="btn s" data-addoffer="${i}">Track as Discovered</button></div>`).join("")}</div>`;
+      out.querySelectorAll("[data-addoffer]").forEach(b => b.onclick = async () => { const x = ideas[b.dataset.addoffer]; const r = await save("offers", {name:"[To source] "+String(x.name), vertical:String(x.vertical), category:String(x.category||""), markets:String(x.markets||""), network:"Other", demandEvidence:String(x.demandEvidence||""), notes:"Where to search: "+String(x.networks||"")+"\nChecks: "+String(x.checks||""), status:"Discovered"}); await audit("Offer discovered (AI suggestion)","offer:"+r.id,r.name); b.disabled=true; b.textContent="Tracked"; });
+    } catch(e){ out.innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; }
+  },
+  newContent: () => editRecord("content", null, {status:"Idea"}),
+  connectAi: () => aiSetupDialog(),
+  proposeStructure: async () => { toast("Proposing structure…"); try { await apiFetch("POST","/api/structure/propose"); await reloadColl("plans"); await reloadColl("tasks"); scheduleRender(); toast("New structure plan ready"); } catch(e){ toast(e.message); } },
+  importAds: () => openModal(`<h2>Import ads</h2><p class="muted" style="margin:0">For ad sources without an API, such as Google Ads Transparency Center, YouTube or manual research, paste CSV with the header <code>advertiser,platform,format,hook,url,firstShown,duration</code>. AI classifies each ad after import.</p><textarea id="adCsv" style="min-height:200px"></textarea><div id="adErr"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-close>Cancel</button><button class="btn p" id="adGo">Import</button></div>`, () => { $("#adGo").onclick = async () => {
+    const lines = $("#adCsv").value.trim().split(/\r?\n/).filter(Boolean); if (lines.length<2) { $("#adErr").innerHTML = `<div class="note bad">Add a header row and at least one ad.</div>`; return; }
+    const split = l => (l.match(/("([^"]|"")*"|[^,]*)(,|$)/g)||[]).map(s=>s.replace(/,$/,"").replace(/^"|"$/g,"").replace(/""/g,'"').trim());
+    const head = split(lines[0]).map(h=>h.toLowerCase()); const rows = lines.slice(1).map(l=>{ const v=split(l); const o={}; head.forEach((h,i)=>o[h]=v[i]||""); return o; });
+    try { const r = await apiFetch("POST","/api/ads/import",{rows, source:"Console import"}); await reloadColl("ads"); closeModal(); render(); toast(`Imported ${r.added} ads, classified ${r.classified}`); } catch(e){ $("#adErr").innerHTML = `<div class="note bad">${esc(e.message)}</div>`; } }; }),
+  refreshJobs: async () => { try { AUTO.jobs = await apiFetch("GET","/api/jobs"); } catch(e){ toast(e.message); } await reloadAll(); },
+  runLearning: async () => {
+    if (view!=="learning") go("learning");
+    const out = document.createElement("div"); out.className="card"; out.innerHTML = `<h3>Learning cycle</h3><div class="aiout">Connecting findings across all modules…</div>`;
+    $("#view").insertBefore(out, $("#view").children[1]);
+    try { const recs = await aiJson(`${BRAND_RULES}\n\nYou are the continuous-learning engine of MWC's 360° system. Connect findings ACROSS modules (e.g. chatbot needs → missing offers; new approved offer → needed pages; ad insights → landing pages; email engagement → new interests; analytics → restructuring; competitor moves → opportunities). Rule signals already detected: ${JSON.stringify(ruleSignals().slice(0,10).map(s=>s.t))}.\nReply with only a JSON array of 6-10 {"text": the recommended action, "why": the evidence connecting modules, "kind": "Recommendation"|"Need"|"Trend"|"Risk", "module": one of ${JSON.stringify(MODULES.map(m=>m.id))} (where to act), "priority":"High"|"Medium"|"Low"}.\n\n${systemSnapshot()}`, {modelTier:"default"});
+      if (!Array.isArray(recs)) throw {code:"invalid_json"};
+      for (const r of recs) await save("insights", {text:String(r.text||""), why:String(r.why||""), kind:String(r.kind||"Recommendation"), module:MODULES.some(m=>m.id===r.module)?r.module:"", priority:String(r.priority||"Medium"), source:"Learning cycle", status:"Open"});
+      filters.learning = "Open"; render(); toast(`${recs.length} recommendations added`);
+    } catch(e){ out.innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; }
+  },
+  resetChat: () => { CHAT.turns = []; CHAT.lead = {name:"",email:"",consent:false}; render(); },
+  endChat: async () => {
+    const outEl = $("#chatSaveOut");
+    if (API_MODE) {
+      CHAT.lead = {name:$("#leadName").value.trim(), email:$("#leadEmail").value.trim(), consent:$("#leadConsent").checked};
+      outEl.innerHTML = `<div class="aiout" style="margin-top:10px">Processing session on the server…</div>`;
+      try {
+        if (CHAT.lead.email && CHAT.lead.consent) { const r = await fetch("/public/lead",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:CHAT.sessionId, name:CHAT.lead.name, email:CHAT.lead.email, consent:true, page:"/admin (test)"})}).then(r=>r.json()); if (r.error) throw new Error(r.error); }
+        const r = await apiFetch("POST",`/api/chats/${CHAT.sessionId}/process`);
+        outEl.innerHTML = `<div class="note ok" style="margin-top:10px">Saved ${r.insights} insight(s)${CHAT.lead.consent&&CHAT.lead.email?" and updated the customer record":""}.</div>`;
+        toast(`Session saved: ${r.insights} insight(s)`); CHAT.turns = []; CHAT.sessionId = null; CHAT.lead = {name:"",email:"",consent:false}; setTimeout(reloadAll, 2500);
+      } catch(e){ outEl.innerHTML = `<div class="note bad">${esc(e.message)}</div>`; }
+      return;
+    } outEl.innerHTML = `<div class="aiout" style="margin-top:10px">Extracting insights…</div>`;
+    CHAT.lead = {name:$("#leadName").value.trim(), email:$("#leadEmail").value.trim(), consent:$("#leadConsent").checked};
+    const transcript = CHAT.turns.map(t=>`${t.role==="user"?"Visitor":"Bot"}: ${t.content}`).join("\n");
+    try { const x = await aiJson(`Extract primary-research data from this MWC website chat. Reply with only JSON: {"summary": one sentence, "vertical":"Nutra"|"Pet"|"Both"|"", "country": string or "", "interests": [short lowercase topics], "needs": [problems/requirements stated], "questions": [questions the visitor asked], "preferences": [product or buying preferences], "unmetNeeds": [things MWC could not answer or does not offer], "suggestions": [visitor suggestions], "engagement": 0-100}. Only include what the visitor actually said.\n\n${transcript.slice(0,30000)}`, {modelTier:"quick"});
+      let contactId = "";
+      if (CHAT.lead.email && CHAT.lead.consent) {
+        const existing = all("contacts").find(c => (c.email||"").toLowerCase() === CHAT.lead.email.toLowerCase());
+        const base = existing || {stage:"New", source:"Chatbot", history:[]};
+        const merged = {...base, name: CHAT.lead.name || base.name || "", email: CHAT.lead.email,
+          country: base.country || mapCountry(x.country), vertical: x.vertical || base.vertical || "",
+          interests: [...new Set([...(base.interests||[]), ...(x.interests||[])])].slice(0,15),
+          needs: [base.needs, (x.needs||[]).join("; ")].filter(Boolean).join("; ").slice(0,800),
+          engagement: Math.max(Number(base.engagement)||0, Number(x.engagement)||0),
+          consentEmail: true, consentAt: base.consentAt || now(), consentNote: "Chatbot form: 'I agree to receive wellness tips and offers from My Wellness Community by email. I can unsubscribe at any time.'",
+          stage: base.stage==="New" ? "Engaged" : base.stage,
+          history: [...(base.history||[]), {at:now(), kind:"Chatbot", text:String(x.summary||"")}].slice(-50)};
+        const saved = await save("contacts", merged); contactId = saved.id;
+      }
+      await save("chats", {summary:String(x.summary||""), vertical:x.vertical||"", country:x.country||"", interests:x.interests||[], needs:x.needs||[], questions:x.questions||[], unmetNeeds:x.unmetNeeds||[], suggestions:x.suggestions||[], contactId, turns:CHAT.turns.length});
+      const add = async (arr, kind, pr) => { for (const t of (arr||[]).slice(0,4)) await save("insights", {text:String(t), kind, source:"Chatbot", module: kind==="Unmet need"?"offers":"content", priority:pr, status:"Open"}); };
+      await add(x.unmetNeeds, "Unmet need", "High"); await add(x.questions, "Question", "Medium"); await add(x.suggestions, "Suggestion", "Low");
+      outEl.innerHTML = `<div class="note ok" style="margin-top:10px">Saved: ${esc(x.summary)}${contactId?" · customer record updated":" · no contact saved (no consent or email)"}.</div>`;
+      CHAT.turns = []; CHAT.lead = {name:"",email:"",consent:false};
+      setTimeout(render, 1600);
+    } catch(e){ outEl.innerHTML = `<div class="note bad">${esc(aiErr(e))}</div>`; }
+  },
+  exportCsv: async () => {
+    const cols = ["name","email","country","vertical","interests","needs","source","stage","engagement","consentEmail","suppressed"];
+    const csv = [cols.join(","), ...all("contacts").map(c=>cols.map(k=>`"${String(Array.isArray(c[k])?c[k].join("; "):c[k]??"").replace(/"/g,'""')}"`).join(","))].join("\n");
+    try { await navigator.clipboard.writeText(csv); toast("CSV copied to clipboard"); } catch(e){ openModal(`<h2>Customer CSV</h2><textarea style="min-height:300px" id="csvBox">${esc(csv)}</textarea><div class="row" style="justify-content:flex-end"><button class="btn" data-close>Close</button></div>`, ()=>$("#csvBox").select()); }
+  },
+  syncPreview: () => {
+    const ok = all("contacts").filter(emailable);
+    const blocked = all("contacts").filter(c=>!emailable(c));
+    openModal(`<h2>Subscriber sync preview</h2><p class="muted" style="margin:0">These contacts would be sent to MailerLite, each with its segments as groups. Contacts without consent, suppressed or unsubscribed are never sent.</p>
+      <div class="tbl">${ok.length?table([{h:"Email",f:c=>esc(c.email)},{h:"Groups",f:c=>segmentsOf(c).filter(s=>s!=="Emailable").map(s=>`<span class="tag">${esc(s)}</span>`).join("")}], ok):`<p class="muted" style="padding:12px">No eligible contacts.</p>`}</div>
+      <p class="muted" style="margin:0">${blocked.length} contact(s) excluded.</p>
+      <pre class="code">${esc(JSON.stringify(ok.slice(0,3).map(c=>({email:c.email, fields:{name:c.name,country:c.country,vertical:c.vertical}, groups:segmentsOf(c).filter(s=>s!=="Emailable")})),null,2))}</pre>
+      <div class="note">Live sync runs from the backend with the MailerLite API key held in a secrets manager — see Integrations for the code.</div>
+      <div class="row" style="justify-content:flex-end"><button class="btn" data-close>Close</button></div>`);
+  },
+  segCampaign: () => editRecord("campaigns", null, {segment: filters.segments, status:"Draft", type:"Segmented campaign", name:`Campaign — ${filters.segments}`}),
+  pasteCsv: () => {
+    openModal(`<h2>Paste a CSV export</h2><p class="muted" style="margin:0">Header row with any of: date, source, page, sessions, engaged, clicks, conversions. Works with GA4 / Search Console exports after renaming columns.</p>
+      <textarea id="csvIn" style="min-height:200px" placeholder="date,source,page,sessions,engaged,clicks,conversions\n2026-10-01,GA4,/best-joint-supplements-for-dogs/,420,260,38,0"></textarea><div id="csvErr"></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn" data-close>Cancel</button><button class="btn p" id="csvGo">Import</button></div>`, () => {
+      $("#csvGo").onclick = async () => {
+        const lines = $("#csvIn").value.trim().split(/\r?\n/).filter(Boolean); if (lines.length<2) { $("#csvErr").innerHTML=`<div class="note bad">Add a header row and at least one data row.</div>`; return; }
+        const split = l => l.match(/("([^"]|"")*"|[^,]*)(,|$)/g).map(s=>s.replace(/,$/,"").replace(/^"|"$/g,"").replace(/""/g,'"').trim()).slice(0,-0||undefined);
+        const head = split(lines[0]).map(h=>h.toLowerCase()); let n=0;
+        for (const l of lines.slice(1,301)) { const v = split(l); const o = {}; head.forEach((h,i)=>{ if (["date","source","page","notes"].includes(h)) o[h]=v[i]||""; else if (["sessions","engaged","clicks","conversions"].includes(h)) o[h]=Number(String(v[i]||"").replace(/[^\d.]/g,""))||0; }); if (o.page||o.sessions) { await save("metrics", o); n++; } }
+        closeModal(); toast(`Imported ${n} rows`);
+      };
+    });
+  },
+};
+function mapCountry(s){ s=String(s||"").toLowerCase(); if (/us|united states|america/.test(s)) return "USA"; if (/uk|united kingdom|britain|england|scotland|wales/.test(s)) return "UK"; if (/german/.test(s)) return "Germany"; if (/france|french/.test(s)) return "France"; if (/netherland|dutch/.test(s)) return "Netherlands"; if (/ireland/.test(s)) return "Ireland"; return s ? "Other" : ""; }
+
+async function draftMail(id){
+  const c = byId("campaigns", id); if (!c) return;
+  const seg = c.segment || "All emailable";
+  const members = all("contacts").filter(x => emailable(x) && (!c.segment || segmentsOf(x).includes(c.segment)));
+  const interests = count(members, m=>m.interests||[]);
+  const pages = all("content").filter(x=>x.status==="Published").slice(0,15).map(x=>`${x.title} ${x.wpUrl||""}`);
+  const offers = all("offers").filter(isActiveOffer).map(o=>`${o.name} (${o.category})`);
+  aiPanel(`${BRAND_RULES}\n\nWrite a ${c.type} email for MWC.\nCampaign: ${c.name}\nSegment: ${seg} (${members.length} consented subscribers; top interests ${JSON.stringify(interests)})\nVerified pages to link: ${pages.join("; ")||"none yet"}\nActive offers allowed: ${offers.join("; ")||"none — keep it educational"}\nGive: 3 subject line options, preview text, the email body (short, warm, useful, one clear CTA, merge field {$name}), affiliate disclosure if an offer is mentioned, and the required unsubscribe footer line. If it is a sequence type, outline each email in the sequence with day offsets.`);
+}
+
+/* ---------- chat send ---------- */
+async function sendChat(text){
+  if (CHAT.busy || !text) return;
+  if (API_MODE) {
+    CHAT.busy = true; CHAT.turns.push({role:"user", content:text});
+    const box = $("#msgs"); box.innerHTML = chatMsgsHtml() + `<div class="msg a">…</div>`; box.scrollTop = box.scrollHeight;
+    try { const r = await fetch("/public/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:CHAT.sessionId, message:text, page:"/admin (test)"})}).then(r=>r.json()); if (r.error) throw new Error(r.error); CHAT.sessionId = r.sessionId; CHAT.turns.push({role:"assistant", content:r.reply}); }
+    catch(e){ CHAT.turns.push({role:"assistant", content:"("+e.message+")"}); }
+    CHAT.busy = false; const b2=$("#msgs"); if (b2){ b2.innerHTML = chatMsgsHtml(); b2.scrollTop=b2.scrollHeight; } const eb=document.querySelector('[data-act="endChat"]'); if (eb) eb.disabled=false; return;
+  }
+  CHAT.busy = true; CHAT.turns.push({role:"user", content:text});
+  const box = $("#msgs"); box.innerHTML = chatMsgsHtml() + `<div class="msg a" id="pending">…</div>`; box.scrollTop = box.scrollHeight;
+  CHAT.ctl = new AbortController();
+  try {
+    const turns = [{role:"user", content: chatRules() + "\n\n(Conversation with a website visitor follows.)"}, ...CHAT.turns.slice(-16)];
+    const r = await ai(turns, {...(SAMPLE?{cache:false}:{}), modelTier:"quick", signal:CHAT.ctl.signal, onText:({text})=>{ const p=$("#pending"); if(p){ p.textContent=text; box.scrollTop=box.scrollHeight; } }});
+    CHAT.turns.push({role:"assistant", content:r.text});
+  } catch(e){ CHAT.turns.push({role:"assistant", content: e.text || ("(" + aiErr(e) + ")")}); }
+  CHAT.busy = false;
+  const b2 = $("#msgs"); if (b2) { b2.innerHTML = chatMsgsHtml(); b2.scrollTop = b2.scrollHeight; }
+  const eb = document.querySelector('[data-act="endChat"]'); if (eb) eb.disabled = !aiReady();
+}
+
+/* ---------- event binding ---------- */
+function bindView(){
+  const v = $("#view");
+  v.querySelectorAll("[data-filter]").forEach(el => {
+    const h = () => { filters[el.dataset.filter] = el.value; if (el.tagName==="INPUT") { clearTimeout(el._t); el._t = setTimeout(()=>{ render(); const n=$(`[data-filter="${el.dataset.filter}"]`); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length);} }, 250); } else render(); };
+    el.addEventListener(el.tagName==="INPUT"?"input":"change", h);
+  });
+  v.querySelectorAll("[data-phase]").forEach(el => el.addEventListener("change", async () => { const p = byId("phases", el.dataset.phase); await save("phases", {...p, status: el.value}); toast("Phase updated"); }));
+  const cf = $("#chatForm"); if (cf) cf.addEventListener("submit", e => { e.preventDefault(); const i=$("#chatIn"); const t=i.value.trim(); i.value=""; sendChat(t); });
+  ["leadName","leadEmail","leadConsent"].forEach(id => { const el = $("#"+id); if (el) el.addEventListener("change", () => { CHAT.lead = {name:$("#leadName").value, email:$("#leadEmail").value, consent:$("#leadConsent").checked}; }); });
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-go],[data-new],[data-edit],[data-act],[data-offer],[data-eval],[data-move],[data-content],[data-contact],[data-seg],[data-ins],[data-draftmail],[data-sendmail],[data-runjob],[data-task],[data-plan]");
+  if (!t || t.disabled) return;
+  if (t.closest("#modal")) return; // modal binds its own
+  const d = t.dataset;
+  if (d.go) return go(d.go);
+  if (d.new) return editRecord(d.new, null, d.new==="social"?{status:"Planned"}:d.new==="contacts"?{stage:"New"}:d.new==="campaigns"?{status:"Draft"}:{});
+  if (d.edit) { const [c,id] = d.edit.split(":"); return editRecord(c,id); }
+  if (d.act) return ACTIONS[d.act] && ACTIONS[d.act]();
+  if (d.offer) return openOffer(d.offer);
+  if (d.content) return openContent(d.content);
+  if (d.contact) return openContact(d.contact);
+  if (d.draftmail) return draftMail(d.draftmail);
+  if (d.sendmail) { const cm = byId("campaigns", d.sendmail); return openModal(`<h2>Send “${esc(cm.name)}”?</h2><p class="muted" style="margin:0">Sends through MailerLite to the consented members of <b>${esc(cm.segment||"All emailable")}</b>. Suppressed contacts are excluded.</p><div id="smE"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-close>Cancel</button><button class="btn p" id="smGo">Send now</button></div>`, () => { $("#smGo").onclick = async () => { try { const r = await apiFetch("POST",`/api/campaigns/${cm.id}/send`); S.campaigns.set(r.id,r); closeModal(); toast(r.status==="Sending"?"Campaign sending":"Campaign approved"); } catch(e){ $("#smE").innerHTML = `<div class="note bad">${esc(e.message)}</div>`; } }; }); }
+  if (d.plan) { const [id,act] = d.plan.split("|"); return apiFetch("POST",`/api/plans/${id}/${act}`,{}).then(r=>{ toast(act==="apply"?`Applied: ${r.categoriesCreated} categories, ${r.menuItems} menu items${r.warnings?.length?' — '+r.warnings[0]:''}`:"Plan rejected"); reloadAll(); }).catch(e=>toast(e.message)); }
+  if (d.runjob) { t.disabled = true; t.textContent = "Running…"; return apiFetch("POST",`/api/jobs/${d.runjob}/run`).then(r=>{ toast(`${d.runjob}: done`); reloadAll(); }).catch(e=>{ toast(e.message); reloadAll(); }); }
+  if (d.task) { const [id,s] = d.task.split("|"); const tk = byId("tasks",id); if (tk) save("tasks",{...tk, status:s}); return; }
+  if (d.seg) { filters.segments = d.seg; return render(); }
+  if (d.ins) { const [id,s] = d.ins.split("|"); const i = byId("insights",id); if (i) save("insights", {...i, status:s}); return; }
+  if (d.move) { const [id,n] = d.move.split("|"); return moveOffer(id,n); }
+  if (d.eval) return evaluateOffer(d.eval, t);
+});
+$("#mnavSel").addEventListener("change", e => go(e.target.value));
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (h && h!==view) go(h); });
+
+async function evaluateOffer(id, btn){
+  const o = byId("offers", id); if (!o) return;
+  btn.disabled = true; btn.textContent = "Evaluating…";
+  if (API_MODE) { try { const r = await apiFetch("POST",`/api/offers/${id}/evaluate`); S.offers.set(r.id,r); toast(`${o.name}: ${r.score}/100`); openOffer(id); } catch(e){ toast(e.message); btn.disabled=false; btn.textContent="Evaluate"; } return; }
+  try { const ev = await aiJson(`${BRAND_RULES}\n\nEvaluate this affiliate offer for MWC against market demand and customer data. Score 0-100 where demand fit and customer need matter most, then reputation/verifiability, programme terms, permitted traffic, promotional materials and content opportunity. Penalise unverifiable claims and missing information. Reply with only JSON {"score":number, "demandFit":string, "customerNeed":string, "reputation":string, "terms":string, "trafficFit":string, "contentOpportunities":string, "risks":string, "missingInfo":string, "recommendation":"Shortlist"|"Needs more research"|"Reject"}.\n\nOffer: ${JSON.stringify({name:o.name,network:o.network,vertical:o.vertical,category:o.category,markets:o.markets,commission:o.commission,metric:o.metric,reputation:o.reputation,traffic:o.traffic,materials:o.materials,demandEvidence:o.demandEvidence,notes:o.notes})}\n\nMWC context: ${systemSnapshot(8)}`);
+    const score = Math.max(0, Math.min(100, Math.round(Number(ev.score)||0)));
+    const body = {...byId("offers",id), score, evaluation: ev};
+    if (body.status === "Discovered") body.status = "Under evaluation";
+    await save("offers", body); await audit("AI evaluation", "offer:"+id, `${o.name}: ${score}/100 — ${ev.recommendation||""}`);
+    toast(`${o.name}: ${score}/100`); openOffer(id);
+  } catch(e){ toast(aiErr(e)); btn.disabled = false; btn.textContent = "Evaluate"; }
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  const h = location.hash.slice(1); if (MODULES.some(m=>m.id===h)) view = h;
+  loadKeyAi();
+  if (API_MODE) {
+    try { TOKEN = localStorage.getItem("mwc360_token"); } catch(e){}
+    const start = async () => { try { const me = await apiFetch("GET","/api/me"); whoName = me.name; dbState = `server (${me.name}, ${me.role})`; await reloadAll(); AUTO.jobs = await apiFetch("GET","/api/jobs").catch(()=>[]); render(); setInterval(()=>{ if(!modalOpen) reloadAll(); }, 30000); } catch(e){ askToken(e.message); } };
+    const askToken = (msg) => openModal(`<h2>Sign in to MWC 360</h2><p class="muted" style="margin:0">Paste your personal API token (created by an admin with <code>npm run create-admin</code> or the Users API).</p><label class="f">API token<input id="tk" type="password" autocomplete="off"></label>${msg&&TOKEN?`<div class="note bad">${esc(msg)}</div>`:""}<div class="row" style="justify-content:flex-end"><button class="btn p" id="tkGo">Sign in</button></div>`, () => { $("#tkGo").onclick = () => { TOKEN = $("#tk").value.trim(); try{localStorage.setItem("mwc360_token",TOKEN);}catch(e){} closeModal(); start(); }; });
+    dbState = "connecting"; render();
+    if (TOKEN) start(); else askToken("");
+    return;
+  }
+  if (!window.claude || !window.claude.use) { dbState = "local (this browser)"; loadLocal(); render(); return; }
+  render();
+  claude.use("sample").then(s => { SAMPLE = s; if (!dirty) scheduleRender(); else renderRail(); });
+  claude.use("user").then(async u => { USER = u; try { const me = await u?.me?.(); if (me?.name) whoName = me.name; } catch(e){} });
+  const db = await claude.use("db");
+  if (!db) { dbState = "local (this browser)"; loadLocal(); render(); return; }
+  DB = db; let pending = new Set(COLLS);
+  const timer = setTimeout(() => { if (pending.size) { dbState = "slow — data may be out of date"; scheduleRender(); } }, 10000);
+  COLLS.forEach(c => {
+    db.collection(c).onSnapshot(snap => {
+      S[c] = new Map(snap.docs.map(d => [d.id, {...d.data(), id:d.id}]));
+      if (!snap.metadata.fromCache) { pending.delete(c); if (!pending.size) { clearTimeout(timer); dbState = "connected"; } }
+      scheduleRender();
+    }, err => { clearTimeout(timer); dbState = "error: " + err.code; scheduleRender(); });
+  });
+}
+boot();
+</script>
+</body></html>

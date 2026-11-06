@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mwc360
+      POSTGRES_USER: mwc
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U mwc -d mwc360"], interval: 10s, retries: 5 }
+
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["8080:8080"]
+    volumes: [media:/app/data/media]
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    command: ["node", "src/worker.js"]
+    depends_on: { db: { condition: service_healthy } }
+    volumes: [media:/app/data/media]
+
+volumes:
+  pgdata:
+  media:

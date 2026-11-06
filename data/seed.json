@@ -1,0 +1,19 @@
+{
+  "platforms": [
+    {"id":"awin","name":"Awin","vertical":"Nutra","accountStatus":"To verify","api":"API available","twoFA":false,"vault":"Secrets manager: AWIN_API_TOKEN, AWIN_PUBLISHER_ID","notes":"Verify account & programme access. Publisher API: programmes, programme details, transactions."},
+    {"id":"digistore24","name":"Digistore24","vertical":"Nutra","accountStatus":"To verify","api":"API available","twoFA":false,"vault":"Secrets manager: DIGISTORE24_API_KEY","notes":"Verify access; confirm API call format for marketplace functions on first run."},
+    {"id":"clickbank","name":"ClickBank","vertical":"Nutra","accountStatus":"To verify","api":"Reports export only","twoFA":false,"vault":"Secrets manager: CLICKBANK_API_KEY","notes":"No public marketplace API: import marketplace exports via /api/offers/import. Analytics via API."},
+    {"id":"chewy-impact","name":"Chewy via Impact","vertical":"Pet","accountStatus":"To verify","api":"API available","twoFA":false,"vault":"Secrets manager: IMPACT_ACCOUNT_SID, IMPACT_AUTH_TOKEN","notes":"Verify programme access in Impact; check promotional rules."},
+    {"id":"petco","name":"Petco (via Impact)","vertical":"Pet","accountStatus":"Rejected","api":"API available","twoFA":false,"vault":"Secrets manager","notes":"Signup application was rejected. The platform blocks approval/activation of Petco offers until this status changes."},
+    {"id":"zooplus","name":"Zooplus","vertical":"Pet","accountStatus":"To confirm","api":"Unknown","twoFA":false,"vault":"Secrets manager","notes":"Affiliate account and access route need confirmation (likely via Awin)."}
+  ],
+  "phases": [
+    {"id":"p1","n":"1","title":"Architecture & foundation","owner":"Preeti + Sanjay","status":"In progress","scope":"Architecture, central database, APIs, account access & permissions, module dependencies.","acceptance":"Diagrams signed off; database migrated; access register complete; no secrets in DB or code."},
+    {"id":"p2","n":"2","title":"Market intelligence & affiliate management","owner":"Preeti","status":"Not started","scope":"Research repository, discovery, evaluation, approval gateway, offer database.","acceptance":"offers.discover + offers.score run on schedule; only a human approver can activate; Petco blocked."},
+    {"id":"p3","n":"3","title":"Website content automation","owner":"Preeti + Sanjay","status":"Not started","scope":"Content generation, WordPress integration, product pages, comparisons, blogs, creatives, optimisation.","acceptance":"Autopilot drafts reach WordPress as drafts; publishing only after approval with facts verified."},
+    {"id":"p4","n":"4","title":"Social media & advertising intelligence","owner":"Preeti + Sanjay","status":"Not started","scope":"Social integrations, content planning, creatives, ad intelligence, performance feedback.","acceptance":"Published page → posts scheduled and posted via official APIs; insights stored daily."},
+    {"id":"p5","n":"5","title":"Chatbot & customer intelligence","owner":"Preeti + Sanjay","status":"Not started","scope":"Website chatbot, primary research, data collection, CRM, profiling, segmentation.","acceptance":"Widget live on the site; sessions become insights; consented leads become segmented contacts."},
+    {"id":"p6","n":"6","title":"Email marketing","owner":"Preeti + Sanjay","status":"Not started","scope":"MailerLite integration, list sync, workflows, campaign feedback.","acceptance":"Hourly sync of consented contacts; webhook unsubscribes suppress contacts; stats return daily."},
+    {"id":"p7","n":"7","title":"Analytics & continuous optimisation","owner":"Sanjay + Preeti","status":"Not started","scope":"GTM, GA4, Meta Pixel, Search Console, dashboard, feedback loops, end-to-end testing.","acceptance":"npm test passes; live end-to-end scenario passes with real accounts."}
+  ]
+}

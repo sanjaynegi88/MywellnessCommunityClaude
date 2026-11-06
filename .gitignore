@@ -1,0 +1,6 @@
+node_modules/
+.env
+data/*.sqlite
+data/media/
+test/.e2e.sqlite
+*.log

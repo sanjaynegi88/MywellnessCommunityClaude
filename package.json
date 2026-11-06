@@ -1,0 +1,36 @@
+{
+  "name": "mwc360-platform",
+  "version": "1.0.0",
+  "description": "My Wellness Community - unified 360° AI-powered business, marketing and customer intelligence platform",
+  "main": "src/server.js",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "migrate": "knex migrate:latest",
+    "seed": "node scripts/seed.js",
+    "create-admin": "node scripts/create-user.js",
+    "start": "node src/server.js",
+    "worker": "node src/worker.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "adm-zip": "^0.5.16",
+    "better-sqlite3": "^11.7.0",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "google-auth-library": "^9.15.0",
+    "helmet": "^8.0.0",
+    "knex": "^3.1.0",
+    "node-cron": "^3.0.3",
+    "pg": "^8.13.1",
+    "pino": "^9.6.0",
+    "sharp": "^0.33.5"
+  }
+}
